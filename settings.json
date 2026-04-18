@@ -1,0 +1,8 @@
+{
+    "animations_enabled": true,
+    "sync_on_launch": false,
+    "helix_mode": true,
+    "remove_borders": true,
+    "load_edit_buffer": true,
+    "experimental_free_routing": true
+}

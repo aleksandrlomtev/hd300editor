@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.vscode/
+.idea/
+*.swp
+*.bak
+*.tmp
+venv/
+.env
+qt_crash*
+startup_log*
+crash.txt
+preset_names_cache.json
+scratch/

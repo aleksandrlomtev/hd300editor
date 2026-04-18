@@ -1,0 +1,2874 @@
+{
+    "01": {
+        "name": "Screamer",
+        "params": [
+            {
+                "name": "Drive",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Bass",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Tone",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Treble",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Output",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "02": {
+        "name": "Spring",
+        "params": [
+            {
+                "name": "DECAY",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "PRE DELAY",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TONE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "03": {
+        "name": "Smart Harmony",
+        "params": [
+            {
+                "name": "KEY",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SHIFT",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SCALE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "04": {
+        "name": "Chorus",
+        "params": [
+            {
+                "name": "Speed",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "Hz",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Depth",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "CH/VIB",
+                "hw_idx": 3,
+                "type": "discrete",
+                "options": [
+                    "CHORUS",
+                    "VIBRATO"
+                ]
+            },
+            {
+                "name": "Tone",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Mix",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "05": {
+        "name": "Seeker",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FREQ",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "STEPS",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "06": {
+        "name": "Opto Tremolo",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SHAPE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "VOLSNS",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "07": {
+        "name": "Digital Delay",
+        "params": [
+            {
+                "name": "TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "08": {
+        "name": "Tape Echo",
+        "params": [
+            {
+                "name": "TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "09": {
+        "name": "Auto Volume Echo",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "0A": {
+        "name": "Plate",
+        "params": [
+            {
+                "name": "DECAY",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "PRE DELAY",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TONE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "0B": {
+        "name": "Tube Drive",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "0C": {
+        "name": "Classic Distortion",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FILTER",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "0D": {
+        "name": "Heavy Distortion",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "0E": {
+        "name": "Color Drive",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "0F": {
+        "name": "Overdrive",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "10": {
+        "name": "Line6 Drive",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "11": {
+        "name": "Line6 Distortion",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "12": {
+        "name": "Boost Comp",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "COMP",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "13": {
+        "name": "Red Comp",
+        "params": [
+            {
+                "name": "SUSTAIN",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "LEVEL",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "14": {
+        "name": "Blue Comp",
+        "params": [
+            {
+                "name": "SUSTAIN",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "LEVEL",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "16": {
+        "name": "Vetta Comp",
+        "params": [
+            {
+                "name": "SENS",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "LEVEL",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "18": {
+        "name": "Fuzz Pi",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "19": {
+        "name": "Octane Fuzz",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "1A": {
+        "name": "Jet Fuzz",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TONE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SPEED",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "1B": {
+        "name": "Sub Octave Fuzz",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SUB",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "1D": {
+        "name": "Facial Fuzz",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "1E": {
+        "name": "Jumbo Fuzz",
+        "params": [
+            {
+                "name": "DRIVE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "23": {
+        "name": "Parametric EQ",
+        "params": [
+            {
+                "name": "LOWS",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "HIGHS",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FREQ",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "GAIN",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "24": {
+        "name": "4 Band Shift EQ",
+        "params": [
+            {
+                "name": "LO FREQ",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "LO MID",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "HI MID",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "HIGH",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Shift",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "27": {
+        "name": "Tron Down",
+        "params": [
+            {
+                "name": "FREQ",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "RANGE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TYPE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "28": {
+        "name": "Tron Up",
+        "params": [
+            {
+                "name": "FREQ",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "RANGE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TYPE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "29": {
+        "name": "Q Filter",
+        "params": [
+            {
+                "name": "FREQ",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "GAIN",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FILTER",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "2A": {
+        "name": "Ring Modulator",
+        "params": [
+            {
+                "name": "DEPTH",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SHAPE",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "AM/FM",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SPEED",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "2B": {
+        "name": "Dimension",
+        "params": [
+            {
+                "name": "SW 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SW 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SW 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SW 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "2C": {
+        "name": "Frequency Shifter",
+        "params": [
+            {
+                "name": "FREQ",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MODE",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "2D": {
+        "name": "Rotary Drum",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TONE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DRIVE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "2F": {
+        "name": "Pitch Glide",
+        "params": [
+            {
+                "name": "Position",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Heel",
+                "hw_idx": 2,
+                "type": "steps_24",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Toe",
+                "hw_idx": 3,
+                "type": "steps_24",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Mix",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "31": {
+        "name": "Synth String",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "ACCEL",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FREQ",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "32": {
+        "name": "Growler",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FREQ",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "PITCH",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "33": {
+        "name": "Synth-O-Matic",
+        "params": [
+            {
+                "name": "FREQ",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "WAVE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "PITCH",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "34": {
+        "name": "Bass Octaver",
+        "params": [
+            {
+                "name": "TONE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "NORMAL",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OCTAVE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "35": {
+        "name": "V-Tron",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "START",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "END",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MODE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "36": {
+        "name": "Analog Flanger",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MANUAL",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "37": {
+        "name": "U-Vibe",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 0,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "VOLSNS",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "38": {
+        "name": "Phaser",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "STAGE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "39": {
+        "name": "Dual Phaser",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "LFO SHAPE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "3A": {
+        "name": "Barberpole Phaser",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MODE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "3B": {
+        "name": "Panned Phaser",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "PAN",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "PANSPD",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "3C": {
+        "name": "Script Phase",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "3D": {
+        "name": "Pitch Vibrato",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "RISE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "VOLSNS",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "3E": {
+        "name": "Throbber",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FREQ",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "WAVE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "3F": {
+        "name": "Spin Cycle",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FREQ",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "VOLSNS",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "40": {
+        "name": "Obi Wah",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FREQ",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Q",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TYPE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "41": {
+        "name": "Voice Box",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "START",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "END",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "AUTO",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "42": {
+        "name": "Bias Tremolo",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SHAPE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "VOLSNS",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "43": {
+        "name": "Pattern Tremolo",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "STEP 1",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "STEP 2",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "STEP 3",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "STEP 4",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "44": {
+        "name": "Panner",
+        "params": [
+            {
+                "name": "SPEED",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SHAPE",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "VOLSNS",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "45": {
+        "name": "Digital Delay w Mod",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "46": {
+        "name": "Analog Echo",
+        "params": [
+            {
+                "name": "TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "BASS",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "TREBLE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "47": {
+        "name": "Analog Echo w Mod",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "48": {
+        "name": "Echo Platter",
+        "params": [
+            {
+                "name": "TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "WOWFLT",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DRIVE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "49": {
+        "name": "Echo Platter Studio",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "4A": {
+        "name": "Low Res Delay",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "4B": {
+        "name": "Stereo Delay",
+        "params": [
+            {
+                "name": "L TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "L FDBK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "R TIME",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "R FDBK",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "4C": {
+        "name": "Ping Pong Delay",
+        "params": [
+            {
+                "name": "L Time",
+                "hw_idx": 0,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "R Time",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Feedback",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Spread",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Mix",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "4D": {
+        "name": "Ducking Delay",
+        "params": [
+            {
+                "name": "Time",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "ms",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Feedback",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Threshold",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "dB",
+                "hw_max": 2097151,
+                "disp_min": -60,
+                "disp_max": 0
+            },
+            {
+                "name": "Ducking",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Mix",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "4E": {
+        "name": "Tape Echo Studio",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "4F": {
+        "name": "Tube Echo",
+        "params": [
+            {
+                "name": "TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "WOWFLT",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DRIVE",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "50": {
+        "name": "Tube Echo Studio",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "52": {
+        "name": "Sweep Echo",
+        "params": [
+            {
+                "name": "TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "SWPSPD",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "53": {
+        "name": "Sweep Echo Studio",
+        "params": [
+            {
+                "name": "Param 1",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 2",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 3",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 4",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "Param 5",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "54": {
+        "name": "Reverse Delay",
+        "params": [
+            {
+                "name": "TIME",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "FDBACK",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MODSPD",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "DEPTH",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "MIX",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    },
+    "55": {
+        "name": "Room",
+        "params": [
+            {"name": "DECAY", "hw_idx": 1, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "PRE-DELAY", "hw_idx": 2, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "TONE", "hw_idx": 3, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "HIGH CUT", "hw_idx": 4, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "MIX", "hw_idx": 5, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "LEVEL", "hw_idx": 6, "type": "continuous", "unit": "%", "hw_max": 2097151}
+        ]
+    },
+    "56": {
+        "name": "Chamber",
+        "params": [
+            {"name": "DECAY", "hw_idx": 1, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "PRE-DELAY", "hw_idx": 2, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "TONE", "hw_idx": 3, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "HIGH CUT", "hw_idx": 4, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "MIX", "hw_idx": 5, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "LEVEL", "hw_idx": 6, "type": "continuous", "unit": "%", "hw_max": 2097151}
+        ]
+    },
+    "57": {
+        "name": "Hall",
+        "params": [
+            {"name": "DECAY", "hw_idx": 1, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "PRE-DELAY", "hw_idx": 2, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "TONE", "hw_idx": 3, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "HIGH CUT", "hw_idx": 4, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "MIX", "hw_idx": 5, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "LEVEL", "hw_idx": 6, "type": "continuous", "unit": "%", "hw_max": 2097151}
+        ]
+    },
+    "58": {
+        "name": "Cave",
+        "params": [
+            {"name": "DECAY", "hw_idx": 1, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "PRE-DELAY", "hw_idx": 2, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "TONE", "hw_idx": 3, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "HIGH CUT", "hw_idx": 4, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "MIX", "hw_idx": 5, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "LEVEL", "hw_idx": 6, "type": "continuous", "unit": "%", "hw_max": 2097151}
+        ]
+    },
+    "5A": {
+        "name": "Octo",
+        "params": [
+            {"name": "DECAY", "hw_idx": 1, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "PRE-DELAY", "hw_idx": 2, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "TONE", "hw_idx": 3, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "HIGH CUT", "hw_idx": 4, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "MIX", "hw_idx": 5, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "LEVEL", "hw_idx": 6, "type": "continuous", "unit": "%", "hw_max": 2097151}
+        ]
+    },
+    "5B": {
+        "name": "Tile",
+        "params": [
+            {"name": "DECAY", "hw_idx": 1, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "PRE-DELAY", "hw_idx": 2, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "TONE", "hw_idx": 3, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "HIGH CUT", "hw_idx": 4, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "MIX", "hw_idx": 5, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "LEVEL", "hw_idx": 6, "type": "continuous", "unit": "%", "hw_max": 2097151}
+        ]
+    },
+    "5C": {
+        "name": "Echo (Reverb)",
+        "params": [
+            {"name": "TIME", "hw_idx": 1, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "FEEDBACK", "hw_idx": 2, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "TONE", "hw_idx": 3, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "HIGH CUT", "hw_idx": 4, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "MIX", "hw_idx": 5, "type": "continuous", "unit": "%", "hw_max": 2097151},
+            {"name": "LEVEL", "hw_idx": 6, "type": "continuous", "unit": "%", "hw_max": 2097151}
+        ]
+    },
+    "5E": {
+        "name": "Vintage Pre",
+        "params": [
+            {
+                "name": "PHASE",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "GAIN",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "OUTPUT",
+                "hw_idx": 3,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            },
+            {
+                "name": "HPF",
+                "hw_idx": 4,
+                "type": "continuous",
+                "unit": "Hz",
+                "hw_max": 2097151,
+                "disp_min": 1,
+                "disp_max": 500,
+                "decimals": 0
+            },
+            {
+                "name": "LPF",
+                "hw_idx": 5,
+                "type": "continuous",
+                "unit": "Hz",
+                "hw_max": 2097151,
+                "disp_min": 5000,
+                "disp_max": 20000,
+                "decimals": 0
+            }
+        ]
+    },
+    "5F": {
+        "name": "Hard Gate",
+        "params": [
+            {
+                "name": "THRESH",
+                "hw_idx": 1,
+                "type": "continuous",
+                "unit": "dB",
+                "hw_max": 2097151,
+                "disp_min": -60,
+                "disp_max": 0
+            },
+            {
+                "name": "DECAY",
+                "hw_idx": 2,
+                "type": "continuous",
+                "unit": "%",
+                "hw_max": 2097151
+            }
+        ]
+    }
+}
