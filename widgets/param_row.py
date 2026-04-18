@@ -1,5 +1,5 @@
 """
-ParamRow — строка параметра (слайдер/комбобокс) и DiModeButton (кнопка с обработкой ПКМ).
+ParamRow — parameter row (slider/combobox) and DiModeButton (button with RMB handling).
 """
 
 import time
@@ -12,20 +12,21 @@ from PyQt6.QtWidgets import (
 
 
 class ParamRow(QWidget):
+    """Editor parameter row widget."""
     value_changed = pyqtSignal(int, float)  # hw_idx, pct
     learn_clicked = pyqtSignal(object)      # self
 
-    def __init__(self, cfg, pct=50.0, service_mode=False, parent=None, color="#d6923c"):
+    def __init__(self, cfg, pct=50.0, mapping_mode=False, parent=None, color="#d6923c"):
         super().__init__(parent)
         self.cfg          = cfg
-        self._service     = service_mode
+        self._mapping     = mapping_mode
         self.color        = color
         self._anim_qtimer = None
         self._anim_timer_count = 0
         self._last_user_edit = 0
-        self._target_pct = pct # Сохраняем целевое значение
+        self._target_pct = pct # Store target value
         
-        # Эффект для плавного появления
+        # Effect for smooth appearance
         self._opacity_effect = QGraphicsOpacityEffect(self)
         self._opacity_effect.setOpacity(0.0)
         self.setGraphicsEffect(self._opacity_effect)
@@ -33,14 +34,8 @@ class ParamRow(QWidget):
         self._build(pct)
 
     def show_animated(self, delay=0):
-        """Плавное появление всей строки с задержкой."""
+        """Smooth appearance of the entire row with delay."""
         try:
-            main_win = self.window()
-            anim_on = getattr(main_win, "animations_enabled", True)
-            if not anim_on:
-                self._opacity_effect.setOpacity(1.0)
-                return
-
             self._opacity_effect.setOpacity(0.0)
             self._anim_fade = QPropertyAnimation(self._opacity_effect, b"opacity")
             self._anim_fade.setDuration(250)
@@ -55,7 +50,7 @@ class ParamRow(QWidget):
         lay.setContentsMargins(4, 2, 4, 2)
         lay.setSpacing(8)
 
-        if self._service:
+        if self._mapping:
             # 3. METADATA (NAME)
             self.name_edit = QLineEdit(self.cfg.get("name", ""))
             self.name_edit.setFixedWidth(140)
@@ -78,7 +73,7 @@ class ParamRow(QWidget):
             self.btn_learn.setFixedWidth(65)
             self.btn_learn.setFixedHeight(24)
             self.btn_learn.setCheckable(True)
-            self.btn_learn.setToolTip("Learn: Нажми и поверни ручку на процессоре")
+            self.btn_learn.setToolTip("Learn: Click and turn a knob on the processor")
             self.btn_learn.setStyleSheet(f"QPushButton {{ background: #333; font-size: 7pt; font-weight: bold; }} QPushButton:checked {{ background: {self.color}; color: white; border-radius: 4px; }}")
             self.btn_learn.clicked.connect(self._on_learn)
             lay.addWidget(self.btn_learn)
@@ -110,7 +105,7 @@ class ParamRow(QWidget):
             lbl.setStyleSheet("color: #9aa; font-size: 8pt; font-weight: bold;")
             lay.addWidget(lbl)
 
-        # Либо выпадающий список, либо классический слайдер
+        # Either a dropdown list or a classic slider
         vals = self.cfg.get("values", [])
         if vals:
             self.combo = QComboBox()
@@ -163,7 +158,7 @@ class ParamRow(QWidget):
         unit = self.cfg.get("unit", "%")
         decimals = self.cfg.get("decimals", 1)
         if unit == "steps":
-            # Мапим 0..100% на -24..+24
+            # Map 0..100% to -24..+24
             steps = round((pct / 100.0) * 48.0 - 24.0)
             self.val_lbl.setText(f"{steps:+d}")
         elif unit == "%":
@@ -194,7 +189,7 @@ class ParamRow(QWidget):
     def _on_learn(self):     self.learn_clicked.emit(self)
 
     def prepare_for_deletion(self):
-        """Останавливает все процессы перед удалением виджета."""
+        """Stops all processes before deleting the widget."""
         self.blockSignals(True)
         if hasattr(self, "_anim_qtimer") and self._anim_qtimer:
             self._anim_qtimer.stop()
@@ -219,7 +214,7 @@ class ParamRow(QWidget):
         self._update_text(pct)
 
     def animate_to(self, target_pct, start_pct=None, duration=300, easing=QEasingCurve.Type.OutCubic):
-        """Плавно анимирует ползунок к целевому значению (% 0-100)."""
+        """Smoothly animates the slider to the target value (% 0-100)."""
         self._target_pct = target_pct
         if not self.slider or not self.isVisible():
             self.set_pct(target_pct)
@@ -235,7 +230,7 @@ class ParamRow(QWidget):
             self.set_pct(target_pct)
             return
 
-        # Останавливаем предыдущую анимацию если была
+        # Stop previous animation if active
         if self._anim_qtimer and self._anim_qtimer.isActive():
             self._anim_qtimer.stop()
         
@@ -271,7 +266,7 @@ class ParamRow(QWidget):
 
 
 class DiModeButton(QPushButton):
-    """Кнопка с обработкой правого клика (используется для DI Mode)."""
+    """Button with Right Click handling (used for DI Mode)."""
     rightClicked = pyqtSignal()
 
     def __init__(self, text="", parent=None):

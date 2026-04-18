@@ -1,5 +1,5 @@
 """
-BlockButton — иконка-кнопка блока эффекта в сигнальной цепочке.
+BlockButton — icon button for an effect block in the signal chain.
 """
 
 import os
@@ -68,9 +68,9 @@ class BlockButton(QFrame):
     def _refresh_style(self):
         col  = self.state.color()
         sel  = f"border: 2px solid {col};" if self.selected else "border: 1px solid #3a3a3a;"
-        # В AMOLED-режиме фон блока чёрный, иначе тёмно-серый
+        # In Black Mode the block background is black, otherwise dark grey
         main_win = self.window()
-        hm = getattr(main_win, "helix_mode", False) if main_win else False
+        hm = getattr(main_win, "black_mode", False) if main_win else False
         bg = "#000000" if hm else "#1e2126"
         self.setStyleSheet(f"""
             BlockButton {{
@@ -80,7 +80,7 @@ class BlockButton(QFrame):
             }}
         """)
         
-        # Приглушаем иконку, если блок выключен (текст оставляем читаемым)
+        # Dim the icon if block is off (keep text readable)
         if not self.state.is_on:
             eff_icon = QGraphicsOpacityEffect(self)
             eff_icon.setOpacity(0.55)
@@ -105,12 +105,12 @@ class BlockButton(QFrame):
             self.right_clicked_sig.emit(self.state.block_id)
 
     def mouseMoveEvent(self, e):
-        # Drag-n-drop: свободная маршрутизация FX цепочки
+        # Drag-n-drop: free routing of FX chain
         if not self.state.movable:
             return
         if e.buttons() != Qt.MouseButton.LeftButton:
             return
-        # Только если прошли порог 8px — иначе случайный клик запускает drag
+        # Only if passed 8px threshold — otherwise accidental click starts drag
         if not hasattr(self, '_drag_start'):
             return
         delta = e.position().toPoint() - self._drag_start
@@ -120,7 +120,7 @@ class BlockButton(QFrame):
         mime  = QMimeData()
         mime.setText(self.state.block_id)
         drag.setMimeData(mime)
-        # Полупрозрачный ghost — как будто парит
+        # Semi-transparent ghost — like it's floating
         src_px = self.grab()
         ghost  = QPixmap(src_px.size())
         ghost.fill(Qt.GlobalColor.transparent)

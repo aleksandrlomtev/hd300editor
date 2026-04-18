@@ -1,13 +1,13 @@
 """
-routing.py — логика свободной маршрутизации FX-блоков.
+routing.py — free routing logic for FX blocks.
 
-Три публичных функции соответствуют трём сценариям из pain.md:
-  flip_prepost   — Сценарий 1 (только смена PRE/POST)
-  swap_blocks    — Сценарий 2/4 (чистый свап содержимого, флаги не трогаем)
-  combo_swap     — Сценарий 3 (свап + новые pre/post для обоих)
+Public functions:
+  flip_prepost   — Scenario 1 (pre/post flag change only)
+  swap_blocks    — Scenario 2/4 (clean content swap, flags untouched)
+  combo_swap     — Scenario 3 (swap + new pre/post for both)
 
-Никаких зависимостей от Qt или mido. Только мутация BlockState-объектов.
-Вызывающий код сам отвечает за отправку MIDI команд после.
+No dependencies on Qt or mido. Only mutations of BlockState objects.
+The calling code is responsible for sending MIDI commands afterwards.
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ if TYPE_CHECKING:
     from block_model import BlockState
 
 
-# ── Swappable полей BlockState ────────────────────────────────────
-# Всё кроме block_id и slot_id — они привязаны к физическому слоту.
-# pre_post тоже НЕ входит в список — его трогаем отдельно через параметры.
+# ── Swappable fields of BlockState ────────────────────────────────────
+# Everything except block_id and slot_id — they are tied to physical slots.
+# pre_post is ALSO NOT in the list — it is handled separately.
 _SWAP_FIELDS = (
     "model_id",
     "name",
@@ -31,13 +31,13 @@ _SWAP_FIELDS = (
 
 
 def _swap_content(a: "BlockState", b: "BlockState") -> None:
-    """Обменивает содержимое двух блоков (модель, имя, параметры и т.д.).
-    pre_post и slot_id — физические атрибуты слота — не трогаем.
+    """Exchanges content of two blocks (model, name, parameters, etc.).
+    pre_post and slot_id — physical slot attributes — are untouched.
     """
     for field in _SWAP_FIELDS:
         val_a = getattr(a, field)
         val_b = getattr(b, field)
-        # Параметры и extra — копируем (list/dict), чтобы не иметь общих ссылок
+        # Parameters and extra — copy (list/dict) to avoid shared references
         if isinstance(val_a, list):
             setattr(a, field, list(val_b))
             setattr(b, field, list(val_a))
@@ -49,16 +49,16 @@ def _swap_content(a: "BlockState", b: "BlockState") -> None:
             setattr(b, field, val_a)
 
 
-# ── Публичный API ─────────────────────────────────────────────────
+# ── Public API ─────────────────────────────────────────────────
 
 def flip_prepost(bid: str, new_pp: int, blocks: dict) -> None:
-    """Сценарий 1: просто меняет флаг PRE/POST у блока.
-    Вызывается когда юзер дропает блок в зону 1 (открытое пространство панели).
+    """Scenario 1: simply changes the PRE/POST flag of a block.
+    Called when user drops a block into Zone 1 (empty panel space).
 
     Args:
-        bid:    ID блока ('FX1', 'FX2', 'FX3', 'REV', 'VOL')
+        bid:    Block ID ('FX1', 'FX2', 'FX3', 'REV', 'VOL')
         new_pp: 0=PRE, 1=POST
-        blocks: dict[str, BlockState] — всё состояние
+        blocks: dict[str, BlockState] — entire state
     """
     b = blocks.get(bid)
     if b is None:
@@ -67,14 +67,14 @@ def flip_prepost(bid: str, new_pp: int, blocks: dict) -> None:
 
 
 def swap_blocks(bid_a: str, bid_b: str, blocks: dict) -> None:
-    """Сценарий 2 / 4: чистый обмен содержимым двух слотов.
-    pre_post каждого слота остаётся прежним.
-    Вызывается для:
-      - Зона 3 (drop прямо на блок) — безусловный свап
-      - Зона 2 внутри одной зоны (оба PRE или оба POST)
+    """Scenario 2 / 4: clean exchange of content between two slots.
+    pre_post of each slot remains unchanged.
+    Called for:
+      - Zone 3 (drop directly on block) — unconditional swap
+      - Zone 2 inside same zone (both PRE or both POST)
 
     Args:
-        bid_a, bid_b: ID блоков для свапа
+        bid_a, bid_b: Block IDs for swap
         blocks:       dict[str, BlockState]
     """
     a = blocks.get(bid_a)
@@ -85,16 +85,16 @@ def swap_blocks(bid_a: str, bid_b: str, blocks: dict) -> None:
 
 
 def combo_swap(bid_a: str, bid_b: str, new_pp_a: int, new_pp_b: int, blocks: dict) -> None:
-    """Сценарий 3: обмен содержимым + установка новых pre/post флагов.
-    Вызывается для Зоны 2 при кросс-зонном дропе (PRE ↔ POST через AMP).
+    """Scenario 3: content exchange + setting new pre/post flags.
+    Called for Zone 2 cross-zone drops (PRE ↔ POST via AMP).
 
-    Блок A получает новый pre/post = new_pp_a,
-    Блок B получает новый pre/post = new_pp_b.
-    Обычно это «блоки меняются флагами» (A берёт флаг B, B берёт флаг A).
+    Block A gets new pre/post = new_pp_a,
+    Block B gets new pre/post = new_pp_b.
+    Usually blocks "swap flags" (A takes B's flag, B takes A's flag).
 
     Args:
-        bid_a, bid_b:       ID блоков
-        new_pp_a, new_pp_b: новые значения pre_post (0=PRE, 1=POST)
+        bid_a, bid_b:       Block IDs
+        new_pp_a, new_pp_b: new pre_post values (0=PRE, 1=POST)
         blocks:             dict[str, BlockState]
     """
     a = blocks.get(bid_a)
@@ -106,23 +106,23 @@ def combo_swap(bid_a: str, bid_b: str, new_pp_a: int, new_pp_b: int, blocks: dic
     b.pre_post = new_pp_b
 
 
-# ── Утилита для детектирования зоны ──────────────────────────────
+# ── Zone Detection Utility ──────────────────────────────
 
 def determine_swap_type(bid_src: str, bid_tgt: str, blocks: dict) -> tuple[str, int, int]:
-    """Определяет тип свапа для Зоны 2 по текущим pre_post флагам.
+    """Determines swap type for Zone 2 based on current pre_post flags.
 
     Returns:
         (swap_type, new_pp_src, new_pp_tgt)
-        swap_type: 'clean' — тот же pre_post у обоих, флаги не меняем
-                   'combo' — разные pre_post, меняем флаги местами
-        new_pp_src/tgt: новые значения (для 'clean' это текущие значения)
+        swap_type: 'clean' — same pre_post for both, flags unchanged
+                   'combo' — different pre_post, swap flags
+        new_pp_src/tgt: new values (for 'clean' these are current values)
     """
     src = blocks[bid_src]
     tgt = blocks[bid_tgt]
 
     if src.pre_post == tgt.pre_post:
-        # Внутри одной зоны — чистый свап без изменения флагов
+        # Same zone — clean swap without changing flags
         return ("clean", src.pre_post, tgt.pre_post)
     else:
-        # Кросс-зонный — меняемся флагами
+        # Cross-zone — swap flags
         return ("combo", tgt.pre_post, src.pre_post)

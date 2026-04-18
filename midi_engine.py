@@ -1,6 +1,6 @@
 """
-MidiEngineMixin — вся MIDI-логика (connect, send, receive, parse) для POD HD300.
-Используется как mixin для MainWindow, поэтому self.* ссылки работают напрямую.
+MidiEngineMixin — all MIDI logic (connect, send, receive, parse) for POD HD300.
+Used as a mixin for MainWindow, so self.* references work directly.
 """
 
 import time
@@ -19,13 +19,13 @@ from sysex_parser import parse_full_dump, unpack_sysex
 
 
 class MidiEngineMixin:
-    """Mixin-класс, подмешиваемый в MainWindow. Весь MIDI I/O."""
+    """Mixin class mixed into MainWindow. All MIDI I/O."""
 
     # ══ Подключение ══════════════════════════════
 
     def _auto_connect(self):
         if not MIDO_OK:
-            self._log("⚠️ mido не найден. MIDI недоступен.")
+            self._log("⚠️ mido not found. MIDI unavailable.")
             return
         try:
             ins  = mido.get_input_names()
@@ -38,14 +38,14 @@ class MidiEngineMixin:
                 self.conn_lbl.setText("● CONNECTED")
                 self.conn_lbl.setStyleSheet("background: transparent; color: #4caf50; font-weight:bold; font-size:9pt;")
                 self._log(f"✅ MIDI: {hin}")
-                # Шаг 1: запрашиваем номер текущего пресета
+                # Step 1: request current preset number
                 self._request_preset_no()
             else:
                 self.conn_lbl.setText("○ NOT FOUND")
                 self.conn_lbl.setStyleSheet("background: transparent; color: #e74c3c; font-weight:bold; font-size:9pt;")
-                self._log(f"MIDI: устройство не найдено. Доступно: {ins}")
+                self._log(f"MIDI: device not found. Available: {ins}")
         except Exception as e:
-            self._log(f"❌ MIDI ошибка: {e}")
+            self._log(f"❌ MIDI error: {e}")
 
     def _midi_cb(self, msg):
         self._sig_midi_led.emit("rx")
@@ -74,11 +74,11 @@ class MidiEngineMixin:
                     self._sig_cc.emit(msg.value)
 
     def _on_cc_pedal(self, val):
-        """Обработка CC#04 (Педаль экспрессии) - обновление WAH Pos."""
+        """CC#04 processing (Expression Pedal) - update WAH Pos."""
         pct = (val / 127.0) * 100.0
         b_wah = self.blocks.get("WAH")
         if b_wah:
-            # Обновляем значение, даже если блок выключен, чтобы ползунок всегда реагировал
+            # Update value even if block is off, so slider always responds
             if not b_wah.params:
                 b_wah.params = [pct]
             else:
@@ -92,18 +92,18 @@ class MidiEngineMixin:
 
     def _on_sysex(self, raw):
         if getattr(self, "_is_warming_up", False):
-            return # Игнорируем эхо при "прогреве", чтобы не ломать UI
+            return # Ignore echo during "warm-up" to avoid breaking UI
             
         if len(raw) < 8 or raw[0] != 0xF0:
             return
         cmd = raw[6]
-        # УБРАН ТЯЖЕЛЫЙ PRINT КОТОРЫЙ ТРОТЛИЛ БУФЕР
+        # REMOVED HEAVY PRINT THAT THROTTLED THE BUFFER
         
         if cmd == 0x7B:   
-            return # Теперь обрабатывается через _on_dump_raw напрямую
+            return # Now handled via _on_dump_raw directly
             
         elif cmd in [0x5C, 0x5D, 0x5E]:
-            # Обработка состояния On/Off или Pre/Post (CMD 5D/5E)
+            # Process On/Off or Pre/Post state (CMD 5D/5E)
             self._parse_state(raw)
         elif cmd == 0x62:
             # Ответ с номером текущего пресета ТОЛЬКО если sub-type 04:07
@@ -118,18 +118,18 @@ class MidiEngineMixin:
     # ══ Парсинг состояний ════════════════════════
 
     def _parse_state(self, raw):
-        """Парсинг сообщений о байпасе или роутинге (CMD 0x5C/5D/5E).
+        """Parse bypass or routing messages (CMD 0x5C/5D/5E).
         F0 00 01 0C 14 00 [CMD] 00 [SLOT] [VAL] F7
         """
         if len(raw) < 10: return
         slot_raw = raw[8]
         
-        # Запрашиваем дамп для 100% синхронизации, так как тут может быть и роутинг, и bypass
+        # Request dump for 100% synchronization, as this could be routing or bypass
         self._log(f"[STATE] Hardware state changed (CMD {raw[6]:02X}, Slot {slot_raw:02X}). Syncing...")
         self._trigger_live_sync()
 
     def _normalize_slot(self, slot_raw):
-        """Приводит сырой слот с железки к внутреннему стандарту (0x10-0x13 для FX, 0x02 для системных)."""
+        """Normalizes raw slot from hardware to internal standard (0x10-0x13 for FX, 0x02 for system)."""
         if 0x30 <= slot_raw <= 0x33:
             return 0x10 + (slot_raw - 0x30)
             
@@ -142,7 +142,7 @@ class MidiEngineMixin:
         return slot_raw
 
     def _parse_live(self, raw):
-        """Обработка живого обновления параметра от крутилок и ответов на запросы."""
+        """Process live parameter update from knobs and responses to requests."""
         if len(raw) < 13: return
         cmd   = raw[6]
         slot_raw = raw[8]
@@ -151,26 +151,26 @@ class MidiEngineMixin:
         # 21-битное значение
         val = (v1 << 14) | (v2 << 7) | v3
 
-        # 1. Learn Mode (в сервисном режиме)
+        # 1. Learn Mode (in Mapping Mode)
         if self._learning_row:
-            # СОХРАНЯЕМ НОРМАЛИЗОВАННЫЙ ID, чтобы больше не было коллизий raw/norm
+            # SAVE NORMALIZED ID to avoid raw/norm collisions
             norm_id = self._normalize_slot(slot_raw)
             self._learning_row.cfg["hw_idx"] = param
             self._learning_row.idx_spin.setValue(param)
-            self._learning_row.cfg["slot_id"] = norm_id # Теперь тут всегда 0x10-0x13
+            self._learning_row.cfg["slot_id"] = norm_id # Always 0x10-0x13 here
             if self.selected_id in self.blocks:
                 self.blocks[self.selected_id].slot_id = norm_id
             self._learning_row.btn_learn.setChecked(False)
             self._learning_row.setStyleSheet("") 
             self._learning_row = None
-            self._log(f"✅ Learn: Привязано к Slot {norm_id:02X} (Raw: {slot_raw:02X}), Param {param:02X}")
+            self._log(f"✅ Learn: Bound to Slot {norm_id:02X} (Raw: {slot_raw:02X}), Param {param:02X}")
             return
 
-        # 2. НОРМАЛИЗАЦИЯ И ОПРЕДЕЛЕНИЕ БЛОКА
+        # 2. NORMALIZATION AND BLOCK IDENTIFICATION
         target_bid = None
         slot = self._normalize_slot(slot_raw)
 
-        # --- ПРОВЕРКА НА ИЗМЕНЕНИЕ МОДЕЛИ ИЛИ ОСОБЫХ СОСТОЯНИЙ (Pre/Post, On/Off) ---
+        # --- CHECK FOR MODEL CHANGE OR SPECIAL STATES (Pre/Post, On/Off) ---
         if (0x10 <= slot_raw <= 0x13 and param == 0x00) or \
            (slot_raw == 0x00 and param == 0x0A) or \
            (slot_raw == 0x02 and param == 0x13):
@@ -178,17 +178,17 @@ class MidiEngineMixin:
             self._trigger_live_sync()
             return
         
-        # Ищем блок по slot_id (в blocks)
+        # Look for block by slot_id
         potential_bids = [bid for bid, b in self.blocks.items() if b.slot_id == slot]
         if not potential_bids:
-            # Специфичный fallback для некоторых команд AMP на слоте 0x02
+            # Specific fallback for some AMP commands on slot 0x02
             if slot == 0x02: target_bid = "AMP" 
         elif len(potential_bids) == 1:
             target_bid = potential_bids[0]
         
-        # Спец-эвристики
+        # Special heuristics
         if slot_raw == 0x20 and param <= 0x05:
-            # Ручки усилка Drive/Bass/Mid... всегда прилетают в 0x20
+            # Amp knobs Drive/Bass/Mid... always arrive at 0x20
             target_bid = "AMP"
         elif slot_raw == 0x02:
             if param in [0x0A, 0x0B, 0x0C]:   target_bid = "GATE"
@@ -343,13 +343,13 @@ class MidiEngineMixin:
         self._log(f"→ {bid} TYPE: 0x{val:02X} (Slot {slot:02X}, P{param:02X})")
 
     def _send_on_off(self, bid):
-        """Прослойка для вызова корректного метода включения/выключения."""
+        """Wrapper for calling the correct block on/off method."""
         b = self.blocks.get(bid)
         if b:
             self.set_block_on(bid, b.is_on)
 
     def _send_pre_post(self, bid):
-        """Отправляет PRE/POST позицию блока."""
+        """Sends block PRE/POST position."""
         b = self.blocks[bid]
         # Для VOL роутинг на Slot 02, Param 07. Для остальных - Param 01 на основном слоте.
         slot = 0x02 if bid == "VOL" else b.slot_id
@@ -422,7 +422,7 @@ class MidiEngineMixin:
         }
 
     def set_block_on(self, bid, is_on):
-        """Включает или выключает блок. Для головы (AMP) шлет 0x63 на 02:14."""
+        """Toggles block on or off. For AMP sends 0x63 to 02:14."""
         b = self.blocks.get(bid)
         if not b: return
         
@@ -458,7 +458,7 @@ class MidiEngineMixin:
         """
         data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, 0x04, 0x07]
         self._send_raw(data)
-        self._log("→ Запрос номера пресета...")
+        self._log("→ Requesting preset number...")
 
     def _request_preset_dump(self, preset_no):
         """Шаг 2: запросить дамп конкретного пресета.
@@ -470,9 +470,9 @@ class MidiEngineMixin:
         data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x7C, 0x00, b1, b2, b3]
         self._send_raw(data)
         if preset_no == 0x1FFFFF:
-            self._log("→ Запрос дампа (Edit Buffer)...")
+            self._log("→ Requesting dump (Edit Buffer)...")
         else:
-            self._log(f"→ Запрос дампа пресета #{preset_no}...")
+            self._log(f"→ Requesting dump for preset #{preset_no}...")
 
     def _query_block_params(self, bid):
         """Запрашивает текущие значения ручек для указанного блока (в фоновом потоке)."""
@@ -490,7 +490,7 @@ class MidiEngineMixin:
         mapping = self._get_mapping(bid)
         b = self.blocks[bid]
         
-        self._log(f"→ Опрос {bid} ({b.name})...")
+        self._log(f"→ Polling {bid} ({b.name})...")
 
         # Расчитываем базовые ID для запросов
         base_slot = b.slot_id # Для стейта (0x10-0x13)
@@ -528,7 +528,7 @@ class MidiEngineMixin:
             time.sleep(0.008)
 
     def _request_dump(self):
-        """Публичный метод кнопки Dump — запускает двухшаговый процесс."""
+        """Public method for Dump button — starts two-step process."""
         self._request_preset_no()
 
     def _debounced_dump(self):
@@ -553,14 +553,14 @@ class MidiEngineMixin:
         
         if not is_in_di:
             self.saved_preset_for_di = self.current_preset_num
-            self._log(f"[DI] Вход в DI Mode. Запрашиваю Edit Buffer для сохранения...")
+            self._log(f"[DI] Entering DI Mode. Requesting Edit Buffer for saving...")
             self._waiting_for_di_dump = True
             # Запрашиваем дамп Edit Buffer
             self._request_preset_dump(0x1FFFFF)
             # Остальная логика (Mute/PC) сработает в _on_sysex при получении дампа
         else:
             restore_to = self.saved_preset_for_di if self.saved_preset_for_di is not None else 0
-            self._log(f"[DI] Выход из DI Mode. Возвращаюсь на #{restore_to} и восстанавливаю буфер...")
+            self._log(f"[DI] Exiting DI Mode. Returning to #{restore_to} and restoring buffer...")
             if self.midi_out:
                 # 1. Возвращаем пресет
                 self.midi_out.send(mido.Message('program_change', program=restore_to))
@@ -568,7 +568,7 @@ class MidiEngineMixin:
                 if self.saved_edit_buffer_for_di:
                     sysex_body = self.saved_edit_buffer_for_di[1:-1]
                     self.midi_out.send(mido.Message('sysex', data=sysex_body))
-                    self._log("[DI] Сохраненный Edit Buffer отправлен в процессор.")
+                    self._log("[DI] Saved Edit Buffer sent to processor.")
                 
                 # 3. Размьючиваем USB
                 self._send_usb_mute(False)
@@ -576,14 +576,14 @@ class MidiEngineMixin:
             self.saved_edit_buffer_for_di = None
 
     def _force_unmute_usb(self):
-        """Аварийный размьют USB по правому клику."""
-        self._log("[DI] Принудительный размьют USB Monitoring.")
+        """Emergency USB unmute on right click."""
+        self._log("[DI] Force Unmute USB Monitoring.")
         self._send_usb_mute(False)
 
     # ══ LED индикатор ════════════════════════════
 
     def _midi_led(self, direction):
-        """HDD-LED индикатор MIDI активности. TX=жёлтый, RX=синий."""
+        """HDD-LED indicator for MIDI activity. TX=yellow, RX=blue."""
         if not hasattr(self, 'conn_lbl'): return
         if direction == "tx":
             self.conn_lbl.setText("● TX")

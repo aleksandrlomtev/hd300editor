@@ -1,6 +1,6 @@
 """
-POD HD300 Visual Editor v2 (Refactored)
-Точка входа: python -m refactor
+POD HD300 Visual Editor (Refactored)
+Entry point: python -m refactor
 """
 
 import sys
@@ -35,12 +35,12 @@ def main():
     mprint("Inside main()")
     if sys.platform == "win32":
         import ctypes
-        myappid = u"aleks.pod_hd300.visual_editor.v2"
+        myappid = u"aleks.pod_hd300.visual_editor"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     mprint("Creating QApplication...")
     app = QApplication(sys.argv)
-    app.setApplicationName("POD HD300 Visual Editor v2")
+    app.setApplicationName("POD HD300 Visual Editor")
     
     icon_path = os.path.join(SCRIPT_DIR, "icons", "amp.webp")
     if os.path.exists(icon_path):

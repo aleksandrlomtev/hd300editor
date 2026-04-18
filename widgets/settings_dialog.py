@@ -1,47 +1,43 @@
 """
-SettingsDialog — диалог настроек редактора.
+SettingsDialog — editor settings dialog.
 """
 
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QCheckBox
 
 
 class SettingsDialog(QDialog):
-    """Диалог настроек Editor'a. Все изменения применяются мгновенно через колбэки."""
+    """Editor settings dialog. Changes are applied instantly via callbacks."""
     
     def __init__(self, parent=None, **kwargs):
         super().__init__(parent)
-        self.setWindowTitle("Настройки Editor'a")
-        self.setFixedSize(320, 200)
+        self.setWindowTitle("Editor Settings")
+        self.setFixedSize(320, 170)
         self.setStyleSheet("background: #1e2126; color: #eee; font-size: 10pt;")
         
         lay = QVBoxLayout(self)
         
-        self.cb_anim = QCheckBox("Анимации интерфейса")
-        self.cb_anim.setChecked(kwargs.get("animations_enabled", True))
-        
-        self.cb_sync = QCheckBox("Синхронизировать пресеты при старте")
+        self.cb_sync = QCheckBox("Sync presets on startup")
         self.cb_sync.setChecked(kwargs.get("sync_on_launch", True))
         
-        self.cb_helix = QCheckBox("AMOLED-режим (Черный фон)")
-        self.cb_helix.setChecked(kwargs.get("helix_mode", False))
+        self.cb_black = QCheckBox("Black Mode (AMOLED background)")
+        self.cb_black.setChecked(kwargs.get("black_mode", False))
         
-        self.cb_buf = QCheckBox("Грузить Edit Buffer при старте")
+        self.cb_buf = QCheckBox("Load Edit Buffer on startup")
         self.cb_buf.setChecked(kwargs.get("load_edit_buffer", True))
         self.cb_buf.setToolTip(
-            "Если активно: при коннекте прогружается текущее состояние с ручек процессора "
-            "(даже если пресет не был сохранен).\nИначе - скачивается сохраненная версия пресета из памяти."
+            "If active: loads current state from processor knobs on connect "
+            "(even if preset was not saved).\nOtherwise, downloads saved version from memory."
         )
 
-        self.cb_free = QCheckBox("Экспериментальный Free Routing (Drag-n-Drop)")
+        self.cb_free = QCheckBox("Experimental Free Routing (Drag-n-Drop)")
         self.cb_free.setChecked(kwargs.get("experimental_free_routing", False))
         self.cb_free.setToolTip(
-            "ВНИМАНИЕ: Позволяет произвольно менять местами блоки FX1-3 и REV.\n"
-            "Может вызывать щелчки/паузы в звуке при перемещении."
+            "WARNING: Allows arbitrary swapping of FX1-3 and REV blocks.\n"
+            "May cause clicks/pauses in sound during movement."
         )
         self.cb_free.setStyleSheet("color: #e67e22; font-weight: bold;")
         
-        lay.addWidget(self.cb_anim)
         lay.addWidget(self.cb_sync)
-        lay.addWidget(self.cb_helix)
+        lay.addWidget(self.cb_black)
         lay.addWidget(self.cb_buf)
         lay.addWidget(self.cb_free)

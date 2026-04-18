@@ -1,6 +1,6 @@
 """
-MainWindow — главное окно POD HD300 Visual Editor v2.
-Наследует MidiEngineMixin для всей MIDI-логики.
+MainWindow — main window of POD HD300 Visual Editor.
+Inherits MidiEngineMixin for all MIDI logic.
 """
 
 import sys
@@ -30,7 +30,7 @@ from constants import (
 from constants import FX_NAMES, AMP_NAMES, CAB_NAMES, MATCHED_CABS
 from block_model import BlockState
 from sysex_parser import parse_full_dump, unpack_sysex
-from invalid_wheelchair import warmup_4band_eq # Импорт позорных костылей
+from invalid_wheelchair import warmup_4band_eq # Import shameful hacks
 from routing import flip_prepost, swap_blocks, combo_swap, determine_swap_type
 from midi_engine import MidiEngineMixin, MIDO_OK
 from widgets import ParamRow, SignalChainPanel, DiModeButton, SettingsDialog
@@ -45,7 +45,7 @@ from hd300_sysex_utils import make_save_sysex, get_preset_name
 
 class MainWindow(MidiEngineMixin, QMainWindow):
     _sig_sysex     = pyqtSignal(list)
-    _sig_dump_raw  = pyqtSignal(list) # Для передачи распакованных байт дампа из фона в GUI
+    _sig_dump_raw  = pyqtSignal(list) # For passing unpacked dump bytes from background to GUI
     _sig_prog_chg  = pyqtSignal(int)
     _sig_midi_led  = pyqtSignal(str)
     _sig_log       = pyqtSignal(str)
@@ -53,7 +53,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("POD HD300 Visual Editor v2")
+        self.setWindowTitle("POD HD300 Visual Editor")
         self.resize(1280, 820)
 
         # Data
@@ -78,15 +78,14 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             "VOL":  BlockState("VOL",  "Vol Pedal",    "Vol",      0x02,  0x00, movable=True),
             "WAH":  BlockState("WAH",  "Wah Pedal",    "Wah",      0x02,  0x00, movable=False),
         }
-        self.blocks["GATE"].pre_post = 0  # всегда PRE
+        self.blocks["GATE"].pre_post = 0  # always PRE
         self.selected_id   = "FX1"
-        self.service_mode  = False
+        self.mapping_mode  = False
         self.preset_name   = "---"
         
         self.settings = self._load_json("settings.json")
-        self.animations_enabled = self.settings.get("animations_enabled", True)
         self.sync_on_launch = self.settings.get("sync_on_launch", True)
-        self.helix_mode = self.settings.get("helix_mode", False)
+        self.black_mode = self.settings.get("black_mode", False)
         self.remove_borders = self.settings.get("remove_borders", True)
         self.load_edit_buffer = self.settings.get("load_edit_buffer", True)
         self.experimental_free_routing = self.settings.get("experimental_free_routing", False)
@@ -160,14 +159,11 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         return {}
 
     def _save_settings(self):
-        self.settings["animations_enabled"] = getattr(self, "animations_enabled", True)
         self.settings["sync_on_launch"] = getattr(self, "sync_on_launch", True)
-        self.settings["helix_mode"] = getattr(self, "helix_mode", False)
-        self.settings["load_edit_buffer"] = getattr(self, "load_edit_buffer", True)
-        self.settings["experimental_free_routing"] = getattr(self, "experimental_free_routing", False)
-        self.settings["helix_mode"] = getattr(self, "helix_mode", False)
+        self.settings["black_mode"] = getattr(self, "black_mode", False)
         self.settings["remove_borders"] = getattr(self, "remove_borders", True)
         self.settings["load_edit_buffer"] = getattr(self, "load_edit_buffer", True)
+        self.settings["experimental_free_routing"] = getattr(self, "experimental_free_routing", False)
         path = os.path.join(SCRIPT_DIR, "settings.json")
         try:
             with open(path, "w", encoding="utf-8") as f:
@@ -184,7 +180,6 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._log(f"Cache save error: {e}")
 
     def _clear_preset_cache(self):
-        if not getattr(self, "service_mode", False): return
         self.preset_cache = {}
         self._save_preset_cache()
         for p in range(128):
@@ -243,7 +238,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.block_icon.setText(b.icon())
             self.block_icon.setVisible(True)
         
-        hm = getattr(self, "helix_mode", False)
+        hm = getattr(self, "black_mode", False)
         # Акцентный цвет применяем всегда для заголовка и кнопок, чтобы панель была "в тему"
         if hm:
             self.block_title.setStyleSheet(f"font-size:13pt; font-weight:bold; color:{col};")
@@ -277,11 +272,11 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         # Убираем кнопку включения у гейта и педали громкости
         self.btn_on.setVisible(bid not in ["GATE", "VOL", "CAB"])
 
-        # Кнопка сохранения видна только в Service Mode
+        # Кнопка сохранения видна только в Mapping Mode
         if hasattr(self, "btn_save_cfg"):
-            self.btn_save_cfg.setVisible(self.service_mode)
+            self.btn_save_cfg.setVisible(self.mapping_mode)
         if hasattr(self, "btn_clear_cache"):
-            self.btn_clear_cache.setVisible(self.service_mode)
+            self.btn_clear_cache.setVisible(self.mapping_mode)
 
         # PRE/POST кнопка: показываем только для movable
         is_movable = bid in ("VOL","FX1","FX2","FX3","REV")
@@ -483,18 +478,14 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def _render_params(self):
         """Рендерит или обновляет список параметров. Если модель не изменилась — только обновляет значения."""
-        b = self.blocks.get(self.selected_id)
+        bid = self.selected_id
+        b = self.blocks.get(bid)
         if not b: return
-        
-        anim_on = getattr(self, "animations_enabled", True)
         
         # --- SMART UPDATE ---
         # Если мы отрисовываем тот же блок с той же моделью в том же режиме сервиса - НЕ пересоздаем виджеты, а просто плавно двигаем ползунки
-        has_last_service = hasattr(self, "_last_rendered_service")
-        if (self._last_rendered_bid == self.selected_id 
-            and self._last_rendered_model == b.model_id 
-            and has_last_service 
-            and self._last_rendered_service == self.service_mode):
+        if (getattr(self, "_last_rendered_id", None) == bid 
+            and self._last_rendered_mapping == self.mapping_mode):
             for i in range(self.params_layout.count()):
                 it = self.params_layout.itemAt(i)
                 if it and isinstance(it.widget(), ParamRow):
@@ -519,10 +510,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             elif item.spacerItem(): pass
 
         cfg_list = self._get_mapping(self.selected_id)
-        is_pg = (b.model_id == 0x2F)
         
         for i, c in enumerate(cfg_list):
-            if not self.service_mode and not c.get("enabled", True): continue
+            # В обычном режиме скрываем неактивные параметры
+            if not self.mapping_mode and not c.get("enabled", True): continue
             
             d_idx = c.get("cache_idx")
             if d_idx is None: d_idx = i
@@ -530,25 +521,20 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             target_pct = b.params[d_idx] if 0 <= d_idx < len(b.params) else 50.0
             row_color = b.color()
             
-            row = ParamRow(c, target_pct if not anim_on else (50.0 if c.get("type") == "steps_24" else 0.0), service_mode=self.service_mode, color=row_color)
+            row = ParamRow(c, 50.0 if c.get("type") == "steps_24" else 0.0, mapping_mode=self.mapping_mode, color=row_color)
             row.value_changed.connect(lambda h_idx, val, cfg_obj=c, p_idx=i: self._on_param_changed(cfg_obj, val, p_idx))
-            if self.service_mode:
-                row.learn_clicked.connect(self._on_learn_request)
+            
             self.params_layout.addWidget(row)
             
-            if anim_on:
-                delay = i * 25
-                row.show_animated(delay)
-                QTimer.singleShot(delay + 60, lambda r=row, t=target_pct: self._safe_animate(r, t))
-            else:
-                row._opacity_effect.setOpacity(1.0)
+            delay = i * 25
+            row.show_animated(delay)
+            QTimer.singleShot(delay + 60, lambda r=row, t=target_pct: self._safe_animate(r, t))
 
         self.params_layout.addStretch()
         
         # Запоминаем что отрисовали
-        self._last_rendered_bid = self.selected_id
-        self._last_rendered_model = b.model_id
-        self._last_rendered_service = self.service_mode
+        self._last_rendered_id = bid
+        self._last_rendered_mapping = self.mapping_mode
 
     def _safe_animate(self, row, target_pct):
         """Безопасно запускает анимацию, проверяя не удален ли виджет (защита от крашей)."""
@@ -861,7 +847,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._jump_to_amp_on_dump = False
         else:
             self._select_block(self.selected_id)
-        self._log(f"✅ Дамп распознан: {self.preset_name}")
+        self._log(f"✅ Dump recognized: {self.preset_name}")
         
         if getattr(self, "sync_on_launch", False) and not getattr(self, "_initial_sync_done", False):
             self._initial_sync_done = True
@@ -870,7 +856,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
     def _start_preset_sync(self):
         self._sync_mode = True
         self._syncing_preset_idx = 0
-        self._log("⏳ Запуск фоновой синхронизации 128 пресетов...")
+        self._log("⏳ Background sync of 128 presets started...")
         self._update_sync_ui()
         self._fetch_next_preset_name()
 
@@ -1000,7 +986,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     self._is_surveying = False
                     return
                 
-                self._log(f"🛰 Синхронизация {bid} (Slot 0x{q_id:02X})...")
+                self._log(f"🛰 Syncing {bid} (Slot 0x{q_id:02X})...")
                 delay = 0.025 if bid == "REV" else 0.020
 
                 for p_idx in hw_indices:
@@ -1010,7 +996,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     time.sleep(delay)
                 
                 self._is_surveying = False
-                self._log(f"✅ {bid} синхронизирован")
+                self._log(f"✅ {bid} synced")
 
         __import__('threading').Thread(target=_target, daemon=True).start()
 
@@ -1030,7 +1016,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 for bid in ["FX1", "FX2", "FX3"]:
                     if self.blocks[bid].model_id == 0x2F:
                         if not pg_found:
-                            self._log("🛰 Pitch Glide обнаружен! Запрашиваем его параметры...")
+                            self._log("🛰 Pitch Glide detected! Polling parameters...")
                             pg_found = True
                         self._do_query_block_sync(bid)
                         time.sleep(0.010)
@@ -1039,12 +1025,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 self._send_raw([0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, 0x02, 0x14])
                 
                 if not pg_found:
-                    self._log("⏩ Фоновый опрос не требуется (нет Pitch Glide)")
+                    self._log("⏩ Background poll not required (no Pitch Glide)")
                 
                 elapsed = time.time() - (self._sync_start_time if self._sync_start_time > 0 else start_t)
                 self._sync_start_time = 0
                 self._is_surveying = False
-                self._log(f"✅ Полная синхронизация завершена за {elapsed:.2f} сек")
+                self._log(f"✅ Full sync completed in {elapsed:.2f} sec")
                 
                 # Прячем прелоадер
                 self._show_params_preloader(False)
@@ -1108,22 +1094,22 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._spinner_idx = (self._spinner_idx + 1) % len(spinners)
         self.params_overlay.setText(spinners[self._spinner_idx])
         
-        # Расчет геометрии (25% от панели, но не меньше 120px)
+        # Geometry calculation (25% of panel, but at least 120px)
         if hasattr(self, "params_panel"):
             pr = self.params_panel.rect()
             w = max(120, int(pr.width() * 0.25))
             h = max(120, int(pr.height() * 0.25))
-            # Делаем квадратным если высота позволяет
+            # Make square if height allows
             if h > w: h = w
             
             x = (pr.width() - w) // 2
-            # Смещаем в upper middle (примерно 1/4 высоты сверху)
+            # Offset to upper middle (approx 1/4 of height from top)
             y = int(pr.height() * 0.25) - (h // 2)
-            if y < 20: y = 20 # Чтобы не наезжал на самый край
+            if y < 20: y = 20 # So it doesn't touch the very edge
             self.params_overlay.setGeometry(x, y, w, h)
     def _find_cat(self, name):
-        """Интеллектуальный поиск категории по имени эффекта. 
-        Регистронезависимо, игнорируя лишние символы.
+        """Intelligent category search by effect name.
+        Case-insensitive, ignoring extra characters.
         """
         if not name or name == "NONE":
             return "None"
@@ -1138,11 +1124,11 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         return "None"
 
     def _log(self, msg):
-        """Потокобезопасная обертка для логирования."""
+        """Thread-safe logging wrapper."""
         self._sig_log.emit(msg)
 
     def _log_ui(self, msg):
-        """Метод обновления UI, вызывается только через сигнал."""
+        """UI update method, called only via signal."""
         if getattr(self, "log_level", 1) == 0: return # Полная тишина
         
         if hasattr(self, 'status_lbl'):
@@ -1157,23 +1143,18 @@ class MainWindow(MidiEngineMixin, QMainWindow):
     def _open_settings_dialog(self):
         dlg = SettingsDialog(
             self,
-            animations_enabled=getattr(self, "animations_enabled", True),
             sync_on_launch=getattr(self, "sync_on_launch", True),
-            helix_mode=getattr(self, "helix_mode", False),
+            black_mode=getattr(self, "black_mode", False),
             load_edit_buffer=getattr(self, "load_edit_buffer", True),
             experimental_free_routing=getattr(self, "experimental_free_routing", False),
         )
         
-        def on_anim(s):
-            self.animations_enabled = (s == 2)
-            self._save_settings()
-            
         def on_sync(s):
             self.sync_on_launch = (s == 2)
             self._save_settings()
             
-        def on_helix(s):
-            self.helix_mode = (s == 2)
+        def on_black(s):
+            self.black_mode = (s == 2)
             self._save_settings()
             self._apply_styles()
             self._select_block(self.selected_id)
@@ -1190,9 +1171,8 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._save_settings()
             self._refresh_chain()
             
-        dlg.cb_anim.stateChanged.connect(on_anim)
         dlg.cb_sync.stateChanged.connect(on_sync)
-        dlg.cb_helix.stateChanged.connect(on_helix)
+        dlg.cb_black.stateChanged.connect(on_black)
         dlg.cb_buf.stateChanged.connect(on_buf)
         dlg.cb_free.stateChanged.connect(on_free)
         
@@ -1235,7 +1215,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.btn_di = DiModeButton("DI MODE")
         self.btn_di.setFixedWidth(100)
         self.btn_di.setStyleSheet("background-color: #333; color: #888; font-weight: bold; border: 1px solid #555; border-radius: 4px;")
-        self.btn_di.setToolTip("Левый клик: Вкл/Выкл DI (32A + Mute), Правый клик: Unmute (Failsafe)")
+        self.btn_di.setToolTip("Left Click: Toggle DI (32A + Mute), Right Click: Unmute (Failsafe)")
         self.btn_di.clicked.connect(self._toggle_di_mode)
         self.btn_di.rightClicked.connect(self._force_unmute_usb)
         top_lay.addWidget(self.btn_di)
@@ -1244,10 +1224,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.btn_dump.clicked.connect(self._request_dump)
         top_lay.addWidget(self.btn_dump)
 
-        self.btn_service = QPushButton("🔧 Service Mode")
-        self.btn_service.setCheckable(True)
-        self.btn_service.toggled.connect(self._on_service_toggle)
-        top_lay.addWidget(self.btn_service)
+        self.btn_mapping = QPushButton("🔧 Mapping Mode")
+        self.btn_mapping.setCheckable(True)
+        self.btn_mapping.toggled.connect(self._on_mapping_toggle)
+        top_lay.addWidget(self.btn_mapping)
 
         self.btn_settings = QPushButton("⚙ Settings")
         self.btn_settings.clicked.connect(self._open_settings_dialog)
@@ -1297,14 +1277,14 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         hdr_lay.addWidget(self.lbl_p)
         
         self.btn_sync_all = QPushButton("↻ Receive All")
-        self.btn_sync_all.setToolTip("Скачать названия всех 128 пресетов с процессора")
+        self.btn_sync_all.setToolTip("Download all 128 preset names from the processor")
         self.btn_sync_all.setFixedHeight(22)
         self.btn_sync_all.setStyleSheet("background: #252830; font-size: 7pt; padding: 2px 6px; border-radius: 4px;")
         self.btn_sync_all.clicked.connect(self._start_preset_sync)
         hdr_lay.addWidget(self.btn_sync_all)
 
         self.btn_send_active = QPushButton("▲ Send Active")
-        self.btn_send_active.setToolTip("Сохранить текущий пресет в активный слот процессора")
+        self.btn_send_active.setToolTip("Save current preset to the active slot on the processor")
         self.btn_send_active.setFixedHeight(22)
         self.btn_send_active.setStyleSheet("background: #252830; font-size: 7pt; padding: 2px 6px; border-radius: 4px;")
         self.btn_send_active.clicked.connect(self._save_active_preset)
@@ -1431,7 +1411,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         main.addWidget(self.status_lbl)
 
     def _apply_styles(self):
-        hm = getattr(self, "helix_mode", False)
+        hm = getattr(self, "black_mode", False)
         rb = getattr(self, "remove_borders", True)
         
         bg_main = "#000000" if hm else "#1a1c1f"
@@ -1553,7 +1533,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 background: {spl_bg};
             }}
         """)
-        # On/Off button - зелёный когда активен
+        # On/Off button - green when active
         self.btn_on.setStyleSheet("""
             QPushButton { background:#1a3a1a; color:#4caf50; border:1px solid #2e7d32; }
             QPushButton:checked { background:#2e7d32; color: white; }
@@ -1612,7 +1592,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         except: pass
 
     def _sync_browser_to_block(self, b):
-        """Программно выделяет текущую категорию и модель в браузере эффектов."""
+        """Selects current category and model in the effect browser."""
         if not hasattr(self, "cat_list") or not hasattr(self, "model_list"):
             return
             
@@ -1649,9 +1629,9 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     # ── обработчики ────────────────────────────────
 
-    def _on_service_toggle(self, v):
-        self.service_mode = v
-        self.btn_service.setText("🔧 Service Mode [ON]" if v else "🔧 Service Mode")
+    def _on_mapping_toggle(self, v):
+        self.mapping_mode = v
+        self.btn_mapping.setText("🔧 Mapping Mode [ON]" if v else "🔧 Mapping Mode")
         if hasattr(self, "btn_save_cfg"):
             self.btn_save_cfg.setVisible(v)
         if hasattr(self, "btn_clear_cache"):
@@ -1661,7 +1641,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         if hasattr(self, "side_models"):  self.side_models.setVisible(not v)
         
         self._render_params()
-        self._log(f"Service Mode: {'ВКЛЮЧЁН' if v else 'выключен'}")
+        self._log(f"Mapping Mode: {'ON' if v else 'OFF'}")
 
     def _on_prepost_drop(self, bid, new_pp):
         """Zone 1: только флаг, без свапа."""
@@ -1752,8 +1732,8 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def _on_block_right_click(self, bid):
         """ПКМ по блоку в цепи: переключает ON/OFF (Bypass)."""
-        # Гейт и громкость на HD300 обычно не свитчаются так просто, но для FX и AMP - тема.
-        if bid in ["GATE", "VOL"]:
+        # Gate, Volume and Cabinet on HD300 usually are not switched like that.
+        if bid in ["GATE", "VOL", "CAB"]:
             return
 
         b = self.blocks[bid]
@@ -1826,12 +1806,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._render_params()
         self._send_fx_type(bid)
         
-        # ⚡ ХОККИНГ: Только если ставим 4-Band Shift EQ в REV слот
+        # ⚡ HAWKING: Only if 4-Band Shift EQ is placed in REV slot
         if bid == "REV" and b.model_id == 0x24:
-            # Запускаем прогрев в отдельном потоке, чтобы UI не завис на время пауз
+            # Run warmup in a separate thread so UI doesn't freeze during pauses
             import threading
             threading.Thread(target=warmup_4band_eq, args=(self, bid), daemon=True).start()
-            # Даем чуть больше времени перед общим опросом параметров
+            # Give a bit more time before general parameter polling
             QTimer.singleShot(600, lambda: self._query_block_params(bid))
         elif bid == "AMP":
             QTimer.singleShot(150, lambda: self._request_preset_dump(0x1FFFFF))
@@ -1841,7 +1821,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._select_block(bid)
 
     def _on_learn_request(self, row):
-        """Обработка нажатия кнопки Learn в ParamRow"""
+        """Learn button handler in ParamRow"""
         if self._learning_row:
             self._learning_row.btn_learn.setChecked(False)
             self._learning_row.setStyleSheet("")
@@ -1849,18 +1829,18 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         if row.btn_learn.isChecked():
             self._learning_row = row
             row.setStyleSheet("ParamRow { background: #d6923c44; border: 1px solid #d6923c; }")
-            self._log(f"👂 Learn Mode: Крутани ручку на HD300 для '{row.cfg['name']}'")
+            self._log(f"👂 Learn Mode: Turn a knob on HD300 for '{row.cfg['name']}'")
         else:
             self._learning_row = None
             row.setStyleSheet("")
-            self._log("Learn Mode отменён.")
+            self._log("Learn Mode cancelled.")
 
     def _on_preset_dclick(self, item):
         pc = item.data(Qt.ItemDataRole.UserRole)
         if getattr(self, "_sync_mode", False):
             self._sync_mode = False
             self._update_sync_ui()
-            self._log("⏸ Синхронизация прервана пользователем")
+            self._log("⏸ Sync interrupted by user")
             
         if MIDO_OK and self.midi_out:
             self.midi_out.send(mido.Message('program_change', program=pc))
@@ -1870,23 +1850,23 @@ class MainWindow(MidiEngineMixin, QMainWindow):
     # ── Save / Rename ──────────────────────────────
 
     def _save_active_preset(self):
-        """Кнопка 'Send Active': запрашивает edit buffer, потом сохраняет в слот."""
+        """'Send Active' button: requests edit buffer, then saves to slot."""
         if not MIDO_OK or not self.midi_out:
-            self._log("❌ MIDI не подключен — сохранение невозможно.")
+            self._log("❌ MIDI not connected — saving impossible.")
             return
         self._waiting_for_save_dump = True
-        self._log(f"💾 Запрашиваю Edit Buffer для сохранения в слот #{self.current_preset_num}...")
+        self._log(f"💾 Requesting Edit Buffer for saving to slot #{self.current_preset_num}...")
         self._request_preset_dump(0x1FFFFF)
 
     def _do_save_to_processor(self, edit_buffer_raw):
-        """Получен дамп edit buffer — собираем write-SysEx и отправляем."""
+        """Edit buffer dump received — assemble write-SysEx and send."""
         pc = self.current_preset_num
         new_name = self._pending_rename if self._pending_rename else self.preset_name
 
         try:
             sysex = make_save_sysex(edit_buffer_raw, pc, new_name)
         except Exception as e:
-            self._log(f"❌ Ошибка сборки SysEx: {e}")
+            self._log(f"❌ SysEx assembly error: {e}")
             return
 
         sysex_body = sysex[1:-1]
@@ -1894,7 +1874,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
         bank = (pc // 4) + 1
         sub = ["A", "B", "C", "D"][pc % 4]
-        self._log(f"✅ Пресет '{new_name}' сохранён в {bank:02d}{sub} (#{pc})")
+        self._log(f"✅ Preset '{new_name}' saved to {bank:02d}{sub} (#{pc})")
 
         self.preset_name = new_name
         self._pending_rename = None
@@ -1910,13 +1890,13 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._update_preset_ui(pc, name=new_name)
 
     def _on_preset_right_click(self, pos):
-        """ПКМ на пресете: inline rename ТОЛЬКО для активного."""
+        """RMB on preset: inline rename ONLY for active."""
         item = self.preset_list.itemAt(pos)
         if not item:
             return
         pc = item.data(Qt.ItemDataRole.UserRole)
         if pc != self.current_preset_num:
-            return  # только активный пресет
+            return  # active preset only
 
         current_name = self.preset_name or ""
         edit = QLineEdit(current_name)
@@ -1944,7 +1924,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.preset_list.removeItemWidget(item)
 
             self._update_preset_ui(pc, name=new_name)
-            self._log(f"📝 Имя изменено на '{new_name}' (не сохранено — нажми Send Active)")
+            self._log(f"📝 Name changed to '{new_name}' (unsaved — click Send Active)")
 
         edit.returnPressed.connect(finish)
         edit.editingFinished.connect(finish)

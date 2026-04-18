@@ -1,5 +1,5 @@
 """
-Модель данных блока сигнальной цепи (FX, AMP, CAB, Gate, Vol, Wah).
+Data model for a signal chain block (FX, AMP, CAB, Gate, Vol, Wah).
 """
 
 from constants import (
@@ -7,7 +7,7 @@ from constants import (
     CATEGORY_COLOR, CATEGORY_ICON,
 )
 
-# slot_id'ы для FX блоков (для отправки MIDI команд)
+# slot_ids for FX blocks (for MIDI command sending)
 SLOT_IDS = {
     "FX1": 0x10, "FX2": 0x11, "FX3": 0x12, "REV": 0x13,
     "AMP": 0x02, "CAB": 0x02, "GATE": 0x02,
