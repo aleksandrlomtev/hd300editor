@@ -272,7 +272,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.btn_on.blockSignals(False)
         
         # Убираем кнопку включения у гейта и педали громкости
-        self.btn_on.setVisible(bid not in ["GATE", "VOL"])
+        self.btn_on.setVisible(bid not in ["GATE", "VOL", "CAB"])
 
         # Кнопка сохранения видна только в Service Mode
         if hasattr(self, "btn_save_cfg"):
@@ -1020,6 +1020,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                             pg_found = True
                         self._do_query_block_sync(bid)
                         time.sleep(0.010)
+                
+                # Дополнительно опрашиваем статус головы (AMP)
+                self._send_raw([0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, 0x02, 0x14])
+                
                 if not pg_found:
                     self._log("⏩ Фоновый опрос не требуется (нет Pitch Glide)")
                 

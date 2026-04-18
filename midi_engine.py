@@ -123,6 +123,7 @@ class MidiEngineMixin:
     def _parse_live(self, raw):
         """Обработка живого обновления параметра от крутилок и ответов на запросы."""
         if len(raw) < 13: return
+        cmd   = raw[6]
         slot_raw = raw[8]
         param = raw[9]
         v1, v2, v3 = raw[10], raw[11], raw[12] if len(raw) > 12 else (raw[10], raw[11], 0)
@@ -155,71 +156,42 @@ class MidiEngineMixin:
         if (0x10 <= slot_raw <= 0x13 and param == 0x00) or \
            (slot_raw == 0x00 and param == 0x0A):
             self._log(f"[LIVE] Important State/Model Changed (Slot {slot_raw:02X}, Param {param:02X}). Syncing...")
-            self._trigger_live_sync()
-            return
         
-        # Выбор кабинета (Slot 0x02, Param 0x13) — синхронизация через дамп
-        if slot_raw == 0x02 and param == 0x13:
-            self._log(f"[LIVE] Cabinet Model Changed. Syncing...")
-            self._trigger_live_sync()
-            return
-
-        # 2.1 Ищем блоки, претендующие на этот слот
-        potential_bids = []
-        for bid, b in self.blocks.items():
-            if b.slot_id == slot or self._normalize_slot(b.slot_id) == slot:
-                potential_bids.append(bid)
-        
-        # 2.2 Если коллизия (несколько блоков на один слот), выбираем лучший
-        if len(potential_bids) > 1:
-            # Приоритет текущему выбранному блоку (если он в списке и у него есть такой параметр)
-            if self.selected_id in potential_bids:
-                m = self._get_mapping(self.selected_id)
-                if any(cfg.get("hw_idx") == param for cfg in m):
-                    target_bid = self.selected_id
-            
-            # Если нет - ищем первого, у кого этот параметр включен (enabled)
-            if not target_bid:
-                for bid in potential_bids:
-                    m = self._get_mapping(bid)
-                    for cfg in m:
-                        if cfg.get("hw_idx") == param and cfg.get("enabled", True):
-                            target_bid = bid
-                            break
-                    if target_bid: break
+        # Ищем блок по slot_id (в blocks)
+        potential_bids = [bid for bid, b in self.blocks.items() if b.slot_id == slot]
+        if not potential_bids:
+            # Fallback для AMP
+            if slot == 0x00: target_bid = "AMP"
+            elif slot == 0x02: target_bid = "AMP" # Системный слот тоже может быть AMP
         elif len(potential_bids) == 1:
             target_bid = potential_bids[0]
         
-        # 3. Эвристики для системных блоков (если слот 0x00, 0x02 и т.д. не был найден в blocks)
-        if not target_bid:
-            s = slot # уже нормализован
-            if s in [0x00, 0x01]:
-                if param == 0x13: 
-                    target_bid = "CAB"  # ER Level (slot 0x00)
-                elif param == 0x08: 
-                    target_bid = "WAH"
-                elif param in [0x01, 0x02, 0x03, 0x05]:
-                    # Пытаемся найти, в каком FX слоте сейчас живет Pitch Glide (0x2F)
-                    pg_bid = next((bid for bid in ["FX1", "FX2", "FX3"] if self.blocks[bid].model_id == 0x2F), None)
-                    if pg_bid:
-                        target_bid = pg_bid
-                    else:
-                        target_bid = "AMP"
-                else: 
-                    target_bid = "AMP"
-            elif s == 0x02:
-                if param in [0x0A, 0x0B, 0x0C]:   target_bid = "GATE"
-                elif param == 0x24:               target_bid = "CAB"  # Microphone
-                elif param in [0x07, 0x08, 0x09]: target_bid = "VOL"
-                elif param == 0x12:               target_bid = "WAH"
-                else:                             target_bid = "AMP"
+        # Спец-эвристики
+        if slot_raw == 0x02:
+            if param in [0x0A, 0x0B, 0x0C]:   target_bid = "GATE"
+            elif param in [0x07, 0x08, 0x09]: target_bid = "VOL"
+            elif param == 0x12:               target_bid = "WAH"
+            elif param == 0x14:               target_bid = "AMP"
+        
+        if not target_bid: return
 
-        # 4. Обработка найденного параметра
-        if target_bid:
-            b = self.blocks[target_bid]
+        # 2. ПАРСИНГ ПАРАМЕТРОВ (CMD 0x63 / 0x62)
+        if cmd in [0x62, 0x63]:
+            # Спец-обработка для головы (AMP) On/Off через параметр 14
+            if target_bid == "AMP" and param == 0x14:
+                b = self.blocks.get("AMP")
+                if b:
+                    b.is_on = bool(val & 0x01)
+                    self._update_block_state_ui("AMP")
+                    self._refresh_chain()
+                return
+
+            b = self.blocks.get(target_bid)
+            if not b: return
+            
             mapping = self._get_mapping(target_bid)
             
-            # РАЗДЕЛЕНИЕ ПО СЛОТАМ: 0x1x - СТЕЙТ, 0x2x/0x3x - КРУТИЛКИ
+            # РАЗДЕЛЕНИЕ ПО СЛОТАМ: 0x1x - СТЕЙТ (Routing/OnOff), 0x2x/0x3x - КРУТИЛКИ
             is_state_slot = (0x10 <= slot_raw <= 0x13)
             
             if is_state_slot:
@@ -227,17 +199,17 @@ class MidiEngineMixin:
                     b.pre_post = 1 if val > 0 else 0
                     self._update_block_state_ui(target_bid)
                     self._log(f"[LIVE-S] {target_bid} ({b.name}) ROUTING={'POST' if b.pre_post else 'PRE'}")
-                    self._refresh_chain() # Перерисовка цепи
+                    self._refresh_chain()
                     return
                 elif param == 0x03:
                     b.is_on = (val > 0)
                     self._update_block_state_ui(target_bid)
                     self._log(f"[LIVE-S] {target_bid} ({b.name}) ON={b.is_on}")
-                    self._refresh_chain() # Тушим/зажигаем элемент в цепи
+                    self._refresh_chain()
                     return
                 return
             
-            # Для VOL (Pre/Post)
+            # Для VOL (Pre/Post) на слоте 02
             if slot_raw == 0x02 and param == 0x07:
                 self.blocks["VOL"].pre_post = 1 if val > 0 else 0
                 self._update_block_state_ui("VOL")
@@ -245,37 +217,27 @@ class MidiEngineMixin:
                 self._refresh_chain()
                 return
             
+            # Поиск параметра в маппинге
             p_cfg = None
             p_idx = -1
-            num_m = len(mapping)
             search_param = param
             for i, cfg in enumerate(mapping):
                 if cfg.get("hw_idx") == search_param:
                     p_cfg = cfg
-                    # Используем cache_idx из конфига (для системных блоков с непоследовательными hw_idx)
-                    # Fallback на _get_cache_idx для FX-блоков
-                    p_idx = p_cfg.get("cache_idx")
-                    if p_idx is None:
-                        p_idx = i # Используем позицию в маппинге как индекс в кэше
+                    p_idx = p_cfg.get("cache_idx", i)
                     break
             
-            # РЕЖИМ СДВИГА: Если не нашли по hw_idx, пробуем +1 (для 5-ручковых в 6-ручковых слотах)
-            # ВАЖНО: Мы делаем это только если p_idx все еще -1
+            # Режим сдвига для FX2/3/REV
             if p_idx == -1 and target_bid in ("FX2", "FX3", "REV"):
                 search_param = param + 1
                 for i, cfg in enumerate(mapping):
                     if cfg.get("hw_idx") == search_param:
-                        if not cfg.get("enabled", True) and not self.service_mode:
-                            return
                         p_cfg = cfg
-                        p_idx = p_cfg.get("cache_idx")
-                        if p_idx is None:
-                            p_idx = i
+                        p_idx = p_cfg.get("cache_idx", i)
                         break
             
             if p_idx == -1: return
 
-            # РАСЧЕТ ПРОЦЕНТА
             pct = 0.0
             hi_res = p_cfg.get("hi_res", True)
             
@@ -289,21 +251,15 @@ class MidiEngineMixin:
                     pct = ((db + 96.0) / 96.0) * 100.0
                 else: pct = 100.0
             elif hi_res:
-                # Используем hw_max из конфига или дефолт 21-бит
                 hw_max = p_cfg.get("hw_max", 2097151)
                 raw_pct = (val / float(hw_max)) * 100.0 if hw_max > 0 else 0.0
                 pct = 100.0 - raw_pct if p_cfg.get("reverse", False) else raw_pct
             else:
-                # Обычные 7-битные параметры
                 vals = p_cfg.get("values", [])
                 if vals:
                     pct = (val / (len(vals) - 1)) * 100.0
                 else:
                     pct = (val / 127.0) * 100.0
-
-            # Дебаг для REV слота или подозрительных эффектов
-            if target_bid == "REV" or b.model_id == 0x24:
-                 self._log(f"DEBUG SYNC: Block={target_bid} P={param:02X} Val={val} HR={hi_res} -> {pct:.1f}%")
 
             pct = max(0.0, min(100.0, pct))
             if p_idx < len(b.params):
@@ -315,9 +271,6 @@ class MidiEngineMixin:
     # ══ Построение и отправка SysEx ══════════════
 
     def _make_sysex(self, slot_id, param_idx, val_int, hi_res=True, cmd=0x63):
-        """Строит sysex для отправки параметра.
-        По умолчанию cmd=0x63 (Live Update/Set).
-        """
         header = [0x00, 0x01, 0x0C, 0x14, 0x00, cmd, 0x00, slot_id, param_idx]
         if hi_res:
             v1 = (val_int >> 14) & 0x7F
@@ -330,7 +283,6 @@ class MidiEngineMixin:
     def _send_raw(self, data):
         if self.midi_out:
             try:
-                # DEBUG LOGGING (Level 2)
                 if getattr(self, "log_level", 1) >= 2:
                     hex_str = " ".join(f"{b:02X}" for b in ([0xF0] + data + [0xF7] if data[0] != 0xF0 else data))
                     print(f"[MIDI-TX] {hex_str}")
@@ -341,38 +293,33 @@ class MidiEngineMixin:
                 self._log(f"❌ Send error: {e}")
 
     def _send_usb_mute(self, is_muted):
-        """Мьютит или размьючивает USB мониторинг на процессоре."""
-        val = 0 if is_muted else 2097151 # 7F 7F 7F
-        # Slot 0x04, Param 0x19 - USB Monitoring Mute
+        val = 0 if is_muted else 2097151 
         data = self._make_sysex(0x04, 0x19, val, hi_res=True)
         self._send_raw(data)
 
     def _send_fx_type(self, bid):
-        """Устанавливает тип эффекта (model_id) на процессоре."""
         b = self.blocks[bid]
         slot = b.slot_id
         param = 0x00
         val = b.model_id
         if bid == "AMP":
             slot = 0x00
-            param = 0x0A # Opcode для выбора усилителя
-            val = b.model_id + 1 # Смещение ID (Blackface = 0x01)
+            param = 0x0A 
+            val = b.model_id + 1 
         elif bid == "CAB":
             slot = 0x02
-            param = 0x13 # Opcode для выбора кабинета
-            val = b.model_id # Смещение не нужно (Matched Cab = 0x00)
+            param = 0x13 
+            val = b.model_id 
             
         data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         self._send_raw(data)
         self._log(f"→ {bid} TYPE: 0x{val:02X} (Slot {slot:02X}, P{param:02X})")
 
     def _send_on_off(self, bid):
-        """Отправляет состояние ON/OFF для блока."""
-        b = self.blocks[bid]
-        val = 0x7F if b.is_on else 0x00
-        data = self._make_sysex(b.slot_id, 0x03, val, hi_res=False)
-        self._send_raw(data)
-        self._log(f"→ ON/OFF {bid}: {'ON' if b.is_on else 'OFF'}")
+        """Прослойка для вызова корректного метода включения/выключения."""
+        b = self.blocks.get(bid)
+        if b:
+            self.set_block_on(bid, b.is_on)
 
     def _send_pre_post(self, bid):
         """Отправляет PRE/POST позицию блока."""
@@ -446,6 +393,30 @@ class MidiEngineMixin:
             "slots": target_slots, "hw_idx": hw_idx, "val": val,
             "hi_res": hi_res, "bid": bid,
         }
+
+    def set_block_on(self, bid, is_on):
+        """Включает или выключает блок. Для головы (AMP) шлет 0x63 на 02:14."""
+        b = self.blocks.get(bid)
+        if not b: return
+        
+        # Для головы (AMP) статус шлется как параметр в слоте 02
+        if bid == "AMP":
+            slot = 0x02
+            param = 0x14
+            val = 1 if is_on else 0
+            data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
+        else:
+            # Стандартный On/Off для FX блоков
+            slot = b.slot_id
+            val = 1 if is_on else 0
+            # У CMD 0x5C параметр всегда 0x01 для FX
+            data = self._make_sysex(slot, 0x01, val, hi_res=False, cmd=0x5C)
+        
+        self._send_raw(data)
+        b.is_on = is_on
+        self._update_block_state_ui(bid)
+        self._refresh_chain()
+        self._log(f"→ ON/OFF {bid}: {'ON' if is_on else 'OFF'}")
 
     # ══ Запросы к процессору ══════════════════════
 
