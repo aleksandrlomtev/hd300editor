@@ -492,7 +492,8 @@ class MidiEngineMixin:
         # Расчитываем базовые ID для запросов
         base_slot = b.slot_id # Для стейта (0x10-0x13)
         # q_id для КРУТИЛОК (обычно base_slot + 0x20)
-        q_id = base_slot + 0x20 if base_slot in [0x00, 0x02, 0x10, 0x11, 0x12, 0x13] else base_slot
+        # ИСКЛЮЧАЕМ 0x02 (GATE/VOL/WAH), так как они опрашиваются по прямому адресу
+        q_id = base_slot + 0x20 if base_slot in [0x00, 0x10, 0x11, 0x12, 0x13] else base_slot
 
         # 1. ЗАПРОС СОСТОЯНИЯ (On/Off и Pre/Post)
         # Шлём в базовый слот (0x1x)

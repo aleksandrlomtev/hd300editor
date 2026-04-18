@@ -302,7 +302,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.chain_panel.update_selection(bid)
         
         # Опрашиваем текущие параметры блока при его выборе, чтобы UI был актуальным
-        if bid in ("FX1", "FX2", "FX3", "REV"):
+        if bid in ("FX1", "FX2", "FX3", "REV", "GATE"):
             QTimer.singleShot(80, lambda: self._query_block_params(bid))
 
     def _update_category_filter(self, bid):
@@ -965,21 +965,31 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             with self._midi_survey_lock:
                 self._is_surveying = True
                 b = self.blocks.get(bid)
-                if not b: return
+                if not b: 
+                    self._is_surveying = False
+                    return
                 
-                # Сопоставление FX слота и MIDI слота для запроса крутилок (0x30-0x33)
-                mapping = {0x10: 0x30, 0x11: 0x31, 0x12: 0x32, 0x13: 0x33}
-                q_id = mapping.get(b.slot_id)
+                # q_id: для FX и AMP добавляем 0x20, для слота 0x02 (GATE/CAB/...) оставляем как есть
+                q_id = b.slot_id
+                if q_id != 0x02:
+                    q_id += 0x20
                 
-                if q_id is None:
-                    # Для AMP/CAB/WAH/VOL — если нужно, добавим логику
+                # Получаем список индексов параметров из маппинга блока
+                mapping = self._get_mapping(bid)
+                hw_indices = []
+                for p_cfg in mapping:
+                    hw = p_cfg.get("hw_idx")
+                    if hw is not None:
+                        hw_indices.append(hw)
+
+                if not hw_indices:
                     self._is_surveying = False
                     return
                 
                 self._log(f"🛰 Синхронизация {bid} (Slot 0x{q_id:02X})...")
-                delay = 0.025 if bid == "REV" else 0.020 # REV тяжелее, даем больше времени
+                delay = 0.025 if bid == "REV" else 0.020
 
-                for p_idx in range(6):
+                for p_idx in hw_indices:
                     # F0 00 01 0C 14 00 60 00 SLOT PARAM F7
                     data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, q_id, p_idx]
                     self._send_raw(data)
