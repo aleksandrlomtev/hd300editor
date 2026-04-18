@@ -181,9 +181,8 @@ class MidiEngineMixin:
         # Ищем блок по slot_id (в blocks)
         potential_bids = [bid for bid, b in self.blocks.items() if b.slot_id == slot]
         if not potential_bids:
-            # Fallback для AMP
-            if slot == 0x00: target_bid = "AMP"
-            elif slot == 0x02: target_bid = "AMP" 
+            # Специфичный fallback для некоторых команд AMP на слоте 0x02
+            if slot == 0x02: target_bid = "AMP" 
         elif len(potential_bids) == 1:
             target_bid = potential_bids[0]
         

@@ -2,15 +2,15 @@
   "Distortion": [
     "Screamer", "Tube Drive", "Classic Distortion", "Heavy Distortion", 
     "Color Drive", "Overdrive", "Line6 Drive", "Line6 Distortion", 
-    "Fuzz Pi", "Octave Fuzz", "Jet Fuzz", "Sub Octave Fuzz", "Buzz Saw", 
+    "Fuzz Pi", "Octave Fuzz", "Jet Fuzz", "Sub Octave Fuzz", 
     "Facial Fuzz", "Jumbo Fuzz"
   ],
   "Dynamics": [
-    "Boost Comp", "Red Comp", "Blue Comp", "Blue Comp Treb", 
-    "Vetta Comp", "Vetta Juice", "Hard Gate", "Vintage Pre"
+    "Boost Comp", "Red Comp", "Blue Comp", 
+    "Vetta Comp", "Hard Gate", "Vintage Pre"
   ],
   "Modulation": [
-    "Chorus", "Opto Tremolo", "Rotary Drum", "Rotary Drum & Horn", 
+    "Chorus", "Opto Tremolo", "Rotary Drum", 
     "Dimension", "Analog Flanger", "U-Vibe", "Phaser", "Dual Phaser", 
     "Barberpole Phaser", "Panned Phaser", "Script Phase", "Pitch Vibrato", 
     "Throbber", "Spin Cycle", "Bias Tremolo", "Pattern Tremolo", "Panner"
@@ -19,22 +19,22 @@
     "Digital Delay", "Tape Echo", "Auto Volume Echo", "Dig Delay w/Mod", 
     "Analog Echo", "Analog Echo w/Mod", "Echo Platter", "Echo Platter Studio", 
     "Low Res Delay", "Stereo Delay", "Ping Pong", "Dynamic Delay", 
-    "Tape Echo Studio", "Tube Echo", "Tube Echo Studio", "Multi-Head Delay", 
+    "Tape Echo Studio", "Tube Echo", "Tube Echo Studio", 
     "Sweep Echo", "Sweep Echo Studio", "Reverse Delay"
   ],
   "Reverb": [
-    "Spring", "Plate", "Spring '63", "Particle Verb", "Room", "Chamber", 
-    "Hall", "Cave", "Ducking", "Octo", "Tile", "Echo (Reverb)"
+    "Spring", "Plate", "Room", "Chamber", 
+    "Hall", "Cave", "Octo", "Tile", "Echo (Reverb)"
   ],
   "Pitch/Synth": [
-    "Smart Harmony", "Pitch Glide", "Bass Octaver", "Attack Synth", 
-    "Synth String", "Growler", "Synth-O-Matic", "Octisynth"
+    "Smart Harmony", "Pitch Glide", "Bass Octaver", 
+    "Synth String", "Growler", "Synth-O-Matic"
   ],
   "Filter": [
-    "Seeker", "Slow Filter", "Tron Down", "Tron Up", "Q Filter", 
+    "Seeker", "Tron Down", "Tron Up", "Q Filter", 
     "Ring Mod", "Freq Shifter", "V-Tron", "Obi Wah", "Voice Box"
   ],
   "EQ": [
-    "Graphic EQ", "Studio EQ", "Parametric EQ", "4 Band Shift EQ", "Mid Focus EQ"
+    "Parametric EQ", "4 Band Shift EQ"
   ]
 }

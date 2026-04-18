@@ -14,7 +14,7 @@ try:
 except ImportError:
     MIDO_OK = False
 
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QSize, QEvent, QEasingCurve
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QSize, QEvent, QEasingCurve, QPropertyAnimation
 from PyQt6.QtGui import QColor, QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -118,6 +118,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.log_level = 2
         
         self._is_warming_up = False # Флаг для блокировки эха при прогреве блока
+        self._sync_start_time = 0   # Для замера времени загрузки пресета
         
         # Таймер для дебаунса полной перерисовки
         self._rebuild_debounce = QTimer()
@@ -741,10 +742,15 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def _on_prog_chg(self, pc):
         """Аппаратная смена пресета (MIDI C0 XX) — обновляем UI и заводим таймер страховки."""
+        self._sync_start_time = time.time()
         self._update_preset_ui(pc)
         self._log(f"Пресет изменён: {self.preset_lbl.text().split(': ')[-1]} (#{pc}) [Wait for 0x62 or fallback]")
         self._pending_preset = pc
         self._jump_to_amp_on_dump = True
+        
+        # Показываем прелоадер на панели параметров
+        self._show_params_preloader(True)
+
         # Заводим таймер на 1 секунду. Если прилетит ответ 0x62 раньше — таймер перевзведётся на 300мс.
         self._dump_debounce.start(1000)
 
@@ -1035,11 +1041,86 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 if not pg_found:
                     self._log("⏩ Фоновый опрос не требуется (нет Pitch Glide)")
                 
-                elapsed = time.time() - start_t
+                elapsed = time.time() - (self._sync_start_time if self._sync_start_time > 0 else start_t)
+                self._sync_start_time = 0
                 self._is_surveying = False
                 self._log(f"✅ Полная синхронизация завершена за {elapsed:.2f} сек")
+                
+                # Прячем прелоадер
+                self._show_params_preloader(False)
 
         __import__('threading').Thread(target=_target, daemon=True).start()
+
+    def _show_params_preloader(self, show=True):
+        """Показывает/скрывает локальный прелоадер поверх панели параметров."""
+        if not hasattr(self, "params_panel"): return
+        
+        if show:
+            if not hasattr(self, "params_overlay"):
+                self.params_overlay = QLabel(self.params_panel)
+                self.params_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.params_overlay.setStyleSheet("""
+                    color: #d6923c; 
+                    background: qradialgradient(cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, 
+                                               stop:0 rgba(0,0,0,160), 
+                                               stop:0.7 rgba(0,0,0,80), 
+                                               stop:1 rgba(0,0,0,0));
+                    font-size: 32pt; 
+                    border: none;
+                """)
+                self.params_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+                
+                # Создаем эффект блюра именно ДЛЯ КАРТОЧКИ
+                self.params_overlay_blur = QGraphicsBlurEffect(self.params_overlay)
+                self.params_overlay.setGraphicsEffect(self.params_overlay_blur)
+            
+            self._update_params_spinner()
+            self.params_overlay.show()
+            self.params_overlay.raise_()
+            
+            # Анимация "фокусировки" (размытие -> четкость)
+            self.params_overlay_blur.setEnabled(True)
+            self._blur_anim = QPropertyAnimation(self.params_overlay_blur, b"blurRadius")
+            self._blur_anim.setDuration(400)
+            self._blur_anim.setStartValue(15.0)
+            self._blur_anim.setEndValue(0.0)
+            self._blur_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+            self._blur_anim.start()
+            
+            if not hasattr(self, "_spinner_timer"):
+                self._spinner_timer = QTimer(self)
+                self._spinner_timer.timeout.connect(self._update_params_spinner)
+            self._spinner_idx = 0
+            self._spinner_timer.start(80)
+        else:
+            if hasattr(self, "params_overlay"):
+                # Уходим тоже красиво через прозрачность или просто прячем
+                self.params_overlay.hide()
+            if hasattr(self, "_spinner_timer"):
+                self._spinner_timer.stop()
+
+    def _update_params_spinner(self):
+        """Анимация спиннера и обновление геометрии (25% по центру)."""
+        if not hasattr(self, "params_overlay") or not self.params_overlay.isVisible(): return
+        
+        # Анимация текста
+        spinners = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+        self._spinner_idx = (self._spinner_idx + 1) % len(spinners)
+        self.params_overlay.setText(spinners[self._spinner_idx])
+        
+        # Расчет геометрии (25% от панели, но не меньше 120px)
+        if hasattr(self, "params_panel"):
+            pr = self.params_panel.rect()
+            w = max(120, int(pr.width() * 0.25))
+            h = max(120, int(pr.height() * 0.25))
+            # Делаем квадратным если высота позволяет
+            if h > w: h = w
+            
+            x = (pr.width() - w) // 2
+            # Смещаем в upper middle (примерно 1/4 высоты сверху)
+            y = int(pr.height() * 0.25) - (h // 2)
+            if y < 20: y = 20 # Чтобы не наезжал на самый край
+            self.params_overlay.setGeometry(x, y, w, h)
     def _find_cat(self, name):
         """Интеллектуальный поиск категории по имени эффекта. 
         Регистронезависимо, игнорируя лишние символы.
@@ -1334,6 +1415,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.params_layout.setSpacing(4)
         scroll.setWidget(params_w)
         rl.addWidget(scroll, 1)
+        self.params_panel = right
         splitter.addWidget(right)
 
         splitter.setStretchFactor(0, 0)
