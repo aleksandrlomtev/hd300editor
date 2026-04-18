@@ -49,6 +49,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
     _sig_prog_chg  = pyqtSignal(int)
     _sig_midi_led  = pyqtSignal(str)
     _sig_log       = pyqtSignal(str)
+    _sig_cc        = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()
@@ -136,6 +137,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._sig_prog_chg.connect(self._on_prog_chg)
         self._sig_midi_led.connect(self._midi_led)
         self._sig_log.connect(self._log_ui)
+        self._sig_cc.connect(self._on_cc_pedal)
 
         self._build_ui()
         self._apply_styles()
@@ -373,7 +375,6 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 {"name":"Max Vol",  "hw_idx": 0x09, "enabled":True, "step":1.0, "slot_id": 0x02},
             ],
             "WAH": [
-                {"name":"Model",    "hw_idx": 0x12, "enabled":True, "step":1.0, "slot_id": 0x02, "values": ["Vetta Wah", "Fassel Wah", "Chrome Wah", "Weeper Wah", "Conductor Wah", "Colorful Wah"], "hi_res": False},
                 {"name":"Wah Pos",  "hw_idx": 0x08, "enabled":True, "step":1.0, "slot_id": 0x00, "no_offset": True},
             ],
             "AMP": [
@@ -403,7 +404,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             "CAB": {0x24:0, 0x13:1},
             "GATE": {0x0C:0, 0x0A:1, 0x0B:2}, # 0x0C=Mode, 0x0A=Thresh, 0x0B=Decay
             "VOL": {0x08:0, 0x09:1},
-            "WAH": {0x12:0, 0x08:1}
+            "WAH": {0x08:0}
         }
 
         if bid in fixed:
@@ -808,7 +809,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         bw.model_id = wah_id
         bw.is_on = data["wah_on"]
         bw.name  = data["wah_name"]
-        self.blocks["WAH"].params = [data["wah_id"], data["wah_pos"]]
+        self.blocks["WAH"].params = [data["wah_pos"]]
 
         # FX1-3 + REV
         for bid in ["FX1","FX2","FX3","REV"]:
@@ -953,6 +954,13 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 self.btn_pp.setChecked(b.pre_post == 1)
                 self.btn_pp.setText("POST" if b.pre_post == 1 else "PRE")
                 self.btn_pp.blockSignals(False)
+
+        # Обновляем стиль кнопки в сигнальной цепи (чтобы перерисовывался On/Off стейт)
+        if hasattr(self, "chain_panel"):
+            for btn in self.chain_panel._buttons:
+                if btn.state.block_id == bid:
+                    btn._refresh_style()
+                    btn.update()
 
     def _query_block_params(self, bid):
         """Запрашивает значения ручек для конкретного блока. 
@@ -1717,6 +1725,9 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         elif cat == "Cabinet":
             for i, n in enumerate(self.cats_data["Cabinet"]):
                 if n == name: b.model_id = i; break
+        elif cat == "Wah":
+            for i, n in enumerate(self.cats_data["Wah"]):
+                if n == name: b.model_id = i; break
         else:
             for hex_id, cfg in self.fx_config.items():
                 if cfg.get("name") == name:
@@ -1727,6 +1738,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         b.category = self._find_cat(b.name)
         if cat == "Amp": b.category = "Amp"
         if cat == "Cabinet": b.category = "Cabinet"
+        if cat == "Wah": b.category = "Wah"
         b.params = []
         self._refresh_chain()
         self._render_params()

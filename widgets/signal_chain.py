@@ -71,7 +71,7 @@ class SignalChainPanel(QFrame):
         amp_seen = False
         for bid in ordered_ids:
             st  = states[bid]
-            btn = BlockButton(st, selected=(bid == selected_id))
+            btn = BlockButton(st, selected=(bid == selected_id), parent=self)
             btn.clicked_sig.connect(self.block_clicked)
             btn.right_clicked_sig.connect(self.block_right_clicked)
             self._buttons.append(btn)
@@ -108,7 +108,9 @@ class SignalChainPanel(QFrame):
                 b2 = self._buttons[i+1]
                 x1 = b1.mapTo(self, b1.rect().center()).x()
                 x2 = b2.mapTo(self, b2.rect().center()).x()
-                painter.drawLine(x1, y, x2, y)
+                # Из-за асинхронного layout'а при ребилде кнопки могут кратковременно слипаться в координатах 0, 0
+                if x2 > x1 + 10:
+                    painter.drawLine(x1, y, x2, y)
 
         # ── Drag-zone оверлеи ──
         zone = getattr(self, "_dv_zone", None)

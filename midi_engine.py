@@ -57,6 +57,8 @@ class MidiEngineMixin:
                 print(f"[MIDI-RX] {hex_str}")
             elif msg.type == 'program_change':
                 print(f"[MIDI-RX] Program Change: {msg.program}")
+            elif msg.type == 'control_change':
+                print(f"[MIDI-RX] CC: {msg.control:02X} = {msg.value:02X}")
 
         if msg.type == 'sysex':
             raw = [0xF0] + list(msg.data) + [0xF7]
@@ -66,6 +68,25 @@ class MidiEngineMixin:
                 self._sig_sysex.emit(raw)
         elif msg.type == 'program_change':
             self._sig_prog_chg.emit(msg.program)
+        elif msg.type == 'control_change':
+            if msg.control == 0x04:  # CC#04 (Foot Controller) - WAH Pos
+                if hasattr(self, '_sig_cc'):
+                    self._sig_cc.emit(msg.value)
+
+    def _on_cc_pedal(self, val):
+        """Обработка CC#04 (Педаль экспрессии) - обновление WAH Pos."""
+        pct = (val / 127.0) * 100.0
+        b_wah = self.blocks.get("WAH")
+        if b_wah:
+            # Обновляем значение, даже если блок выключен, чтобы ползунок всегда реагировал
+            if not b_wah.params:
+                b_wah.params = [pct]
+            else:
+                b_wah.params[0] = pct
+                
+            if self.selected_id == "WAH":
+                self._update_slider(0x08, pct)
+            self._log(f"[LIVE] WAH Pos (via CC#4) = {pct:.1f}%")
 
     # ══ Приём SysEx ══════════════════════════════
 
@@ -150,28 +171,31 @@ class MidiEngineMixin:
         slot = self._normalize_slot(slot_raw)
 
         # --- ПРОВЕРКА НА ИЗМЕНЕНИЕ МОДЕЛИ ИЛИ ОСОБЫХ СОСТОЯНИЙ (Pre/Post, On/Off) ---
-        # Мы используем ИСКЛЮЧИТЕЛЬНО slot_raw! Потому что крутилки приходят с оффсетом
-        # (например 0x30 для FX1 или 0x20). Использование нормализованного slot = 0x10
-        # приводит к ложному срабатыванию дампа на кручение ручки и бесконечному циклу!
         if (0x10 <= slot_raw <= 0x13 and param == 0x00) or \
-           (slot_raw == 0x00 and param == 0x0A):
+           (slot_raw == 0x00 and param == 0x0A) or \
+           (slot_raw == 0x02 and param == 0x13):
             self._log(f"[LIVE] Important State/Model Changed (Slot {slot_raw:02X}, Param {param:02X}). Syncing...")
+            self._trigger_live_sync()
+            return
         
         # Ищем блок по slot_id (в blocks)
         potential_bids = [bid for bid, b in self.blocks.items() if b.slot_id == slot]
         if not potential_bids:
             # Fallback для AMP
             if slot == 0x00: target_bid = "AMP"
-            elif slot == 0x02: target_bid = "AMP" # Системный слот тоже может быть AMP
+            elif slot == 0x02: target_bid = "AMP" 
         elif len(potential_bids) == 1:
             target_bid = potential_bids[0]
         
         # Спец-эвристики
-        if slot_raw == 0x02:
+        if slot_raw == 0x20 and param <= 0x05:
+            # Ручки усилка Drive/Bass/Mid... всегда прилетают в 0x20
+            target_bid = "AMP"
+        elif slot_raw == 0x02:
             if param in [0x0A, 0x0B, 0x0C]:   target_bid = "GATE"
             elif param in [0x07, 0x08, 0x09]: target_bid = "VOL"
             elif param == 0x12:               target_bid = "WAH"
-            elif param == 0x14:               target_bid = "AMP"
+            else:                             target_bid = "AMP"
         
         if not target_bid: return
 
@@ -310,6 +334,10 @@ class MidiEngineMixin:
             slot = 0x02
             param = 0x13 
             val = b.model_id 
+        elif bid == "WAH":
+            slot = 0x02
+            param = 0x12
+            val = b.model_id
             
         data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         self._send_raw(data)
@@ -405,6 +433,11 @@ class MidiEngineMixin:
             param = 0x14
             val = 1 if is_on else 0
             data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
+        elif bid == "WAH":
+            slot = 0x00
+            param = 0x09
+            val = 1 if is_on else 0
+            data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         else:
             # Стандартный On/Off для FX блоков
             slot = b.slot_id
@@ -474,6 +507,12 @@ class MidiEngineMixin:
                 s_data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, base_slot, s_param]
                 self._send_raw(s_data)
                 time.sleep(0.008)
+        elif bid == "WAH":
+            # Спец-запрос статуса WAH On/Off
+            if not self.midi_out: return
+            s_data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, 0x00, 0x09]
+            self._send_raw(s_data)
+            time.sleep(0.008)
 
         # 2. ЗАПРОС КРУТИЛОК
         # Шлём в q_id (обычно 0x3x)
@@ -482,7 +521,10 @@ class MidiEngineMixin:
             p_idx = cfg.get("hw_idx")
             if p_idx is None:
                 continue
-            data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, q_id, p_idx]
+            
+            # ВАЖНО: Если у параметра задан свой slot_id, шлём туда! (например, WAH Pos -> 0x00)
+            target_slot = cfg.get("slot_id", q_id)
+            data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, target_slot, p_idx]
             self._send_raw(data)
             time.sleep(0.008)
 
