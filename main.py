@@ -1,5 +1,5 @@
 """
-POD HD300 Visual Editor (Refactored)
+POD HD300 Visual Editor
 Entry point: python -m refactor
 """
 

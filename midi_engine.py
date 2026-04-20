@@ -422,27 +422,26 @@ class MidiEngineMixin:
         }
 
     def set_block_on(self, bid, is_on):
-        """Toggles block on or off. For AMP sends 0x63 to 02:14."""
+        """Toggles block on or off. For HD300 we use CMD 0x63 + Param 0x03 for FX."""
         b = self.blocks.get(bid)
         if not b: return
+        
+        val = 127 if is_on else 0
         
         # Для головы (AMP) статус шлется как параметр в слоте 02
         if bid == "AMP":
             slot = 0x02
             param = 0x14
-            val = 1 if is_on else 0
             data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         elif bid == "WAH":
             slot = 0x00
             param = 0x09
-            val = 1 if is_on else 0
             data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         else:
-            # Стандартный On/Off для FX блоков
+            # Стандартный On/Off для FX блоков (FX1-FX3, REV)
+            # CMD 0x63, Param 0x03
             slot = b.slot_id
-            val = 1 if is_on else 0
-            # У CMD 0x5C параметр всегда 0x01 для FX
-            data = self._make_sysex(slot, 0x01, val, hi_res=False, cmd=0x5C)
+            data = self._make_sysex(slot, 0x03, val, hi_res=False, cmd=0x63)
         
         self._send_raw(data)
         b.is_on = is_on
