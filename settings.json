@@ -3,5 +3,6 @@
     "black_mode": true,
     "remove_borders": true,
     "load_edit_buffer": true,
-    "experimental_free_routing": true
+    "experimental_free_routing": true,
+    "di_preset": 124
 }

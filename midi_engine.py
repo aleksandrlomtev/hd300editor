@@ -547,8 +547,8 @@ class MidiEngineMixin:
     # ══ DI Mode ══════════════════════════════════
 
     def _toggle_di_mode(self):
-        """Переключает проц в DI режим (пресет 32А + Mute USB + сохранение буфера)."""
-        is_in_di = (self.current_preset_num >= 124)
+        """Переключает проц в DI режим (пресет DI + Mute USB + сохранение буфера)."""
+        is_in_di = (self.current_preset_num == getattr(self, "di_preset", 124))
         
         if not is_in_di:
             self.saved_preset_for_di = self.current_preset_num

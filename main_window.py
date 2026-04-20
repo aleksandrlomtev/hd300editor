@@ -89,6 +89,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.remove_borders = self.settings.get("remove_borders", True)
         self.load_edit_buffer = self.settings.get("load_edit_buffer", True)
         self.experimental_free_routing = self.settings.get("experimental_free_routing", False)
+        self.di_preset = self.settings.get("di_preset", 124)
         
         self.current_preset_num = 0
         self.saved_preset_for_di = None
@@ -164,6 +165,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.settings["remove_borders"] = getattr(self, "remove_borders", True)
         self.settings["load_edit_buffer"] = getattr(self, "load_edit_buffer", True)
         self.settings["experimental_free_routing"] = getattr(self, "experimental_free_routing", False)
+        self.settings["di_preset"] = getattr(self, "di_preset", 124)
         path = os.path.join(SCRIPT_DIR, "settings.json")
         try:
             with open(path, "w", encoding="utf-8") as f:
@@ -485,6 +487,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         # --- SMART UPDATE ---
         # Если мы отрисовываем тот же блок с той же моделью в том же режиме сервиса - НЕ пересоздаем виджеты, а просто плавно двигаем ползунки
         if (getattr(self, "_last_rendered_id", None) == bid 
+            and getattr(self, "_last_rendered_model", None) == b.model_id
             and self._last_rendered_mapping == self.mapping_mode):
             for i in range(self.params_layout.count()):
                 it = self.params_layout.itemAt(i)
@@ -534,6 +537,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         
         # Запоминаем что отрисовали
         self._last_rendered_id = bid
+        self._last_rendered_model = b.model_id
         self._last_rendered_mapping = self.mapping_mode
 
     def _safe_animate(self, row, target_pct):
@@ -669,7 +673,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         addr_str = f"{bank:02d}{sub}"
         
         if hasattr(self, "btn_di"):
-            if pc >= 124: # Bank 32
+            if pc == self.di_preset:
                 self.btn_di.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold; border: 2px solid white; border-radius: 4px;")
                 self.btn_di.setText("DI ON")
                 display_name = f"{addr_str} - {name} (DI MODE)" if name else f"{addr_str} (DI MODE)"
@@ -720,7 +724,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._waiting_for_di_dump = False
             self._log("[DI] Safe Edit Buffer получен.")
             if self.midi_out:
-                self.midi_out.send(mido.Message('program_change', program=124))
+                self.midi_out.send(mido.Message('program_change', program=self.di_preset))
                 self._send_usb_mute(True)
             return
 
@@ -1147,6 +1151,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             black_mode=getattr(self, "black_mode", False),
             load_edit_buffer=getattr(self, "load_edit_buffer", True),
             experimental_free_routing=getattr(self, "experimental_free_routing", False),
+            di_preset=getattr(self, "di_preset", 124),
         )
         
         def on_sync(s):
@@ -1171,10 +1176,16 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._save_settings()
             self._refresh_chain()
             
+        def on_di_val(v):
+            self.di_preset = v - 1
+            self._save_settings()
+            self._update_preset_ui(self.current_preset_num)
+            
         dlg.cb_sync.stateChanged.connect(on_sync)
         dlg.cb_black.stateChanged.connect(on_black)
         dlg.cb_buf.stateChanged.connect(on_buf)
         dlg.cb_free.stateChanged.connect(on_free)
+        dlg.sb_di.valueChanged.connect(on_di_val)
         
         dlg.exec()
 

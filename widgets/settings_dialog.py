@@ -2,7 +2,8 @@
 SettingsDialog — editor settings dialog.
 """
 
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QCheckBox
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QCheckBox, QSpinBox, QLabel
 
 
 class SettingsDialog(QDialog):
@@ -11,7 +12,7 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None, **kwargs):
         super().__init__(parent)
         self.setWindowTitle("Editor Settings")
-        self.setFixedSize(320, 170)
+        self.setFixedSize(340, 220)
         self.setStyleSheet("background: #1e2126; color: #eee; font-size: 10pt;")
         
         lay = QVBoxLayout(self)
@@ -37,7 +38,37 @@ class SettingsDialog(QDialog):
         )
         self.cb_free.setStyleSheet("color: #e67e22; font-weight: bold;")
         
+        # DI Preset Selection
+        di_lay = QHBoxLayout()
+        di_lay.addWidget(QLabel("DI Mode Preset:"))
+        
+        self.sb_di = QSpinBox()
+        self.sb_di.setRange(1, 128)
+        self.sb_di.setValue(kwargs.get("di_preset", 124) + 1)
+        self.sb_di.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
+        self.sb_di.setFixedWidth(50)
+        self.sb_di.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.sb_di.setStyleSheet("background: #2c313a; border: 1px solid #444; padding: 2px; font-weight: bold;")
+        
+        self.lbl_di_info = QLabel()
+        self.lbl_di_info.setStyleSheet("color: #d6923c; font-weight: bold;")
+        
+        di_lay.addWidget(self.sb_di)
+        di_lay.addWidget(self.lbl_di_info)
+        di_lay.addStretch()
+        
+        self.sb_di.valueChanged.connect(self._update_di_info)
+        self._update_di_info(self.sb_di.value())
+        
         lay.addWidget(self.cb_sync)
         lay.addWidget(self.cb_black)
         lay.addWidget(self.cb_buf)
         lay.addWidget(self.cb_free)
+        lay.addSpacing(10)
+        lay.addLayout(di_lay)
+
+    def _update_di_info(self, val_1_128):
+        val = val_1_128 - 1
+        bank = (val // 4) + 1
+        sub = ["A", "B", "C", "D"][val % 4]
+        self.lbl_di_info.setText(f"({bank:02d}{sub})")
