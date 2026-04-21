@@ -1,5 +1,5 @@
 """
-MainWindow — main window of POD HD300 Visual Editor.
+MainWindow — main window of POD HD300 Unchained Editor.
 Inherits MidiEngineMixin for all MIDI logic.
 """
 
@@ -53,7 +53,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("POD HD300 Visual Editor")
+        self.setWindowTitle("POD HD300 Unchained Editor")
         self.resize(1280, 820)
 
         # Data

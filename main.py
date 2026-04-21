@@ -1,5 +1,5 @@
 """
-POD HD300 Visual Editor
+POD HD300 Unchained Editor
 Entry point: python -m refactor
 """
 
@@ -40,7 +40,7 @@ def main():
 
     mprint("Creating QApplication...")
     app = QApplication(sys.argv)
-    app.setApplicationName("POD HD300 Visual Editor")
+    app.setApplicationName("POD HD300 Unchained Editor")
     
     icon_path = os.path.join(SCRIPT_DIR, "icons", "amp.webp")
     if os.path.exists(icon_path):
