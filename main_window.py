@@ -223,7 +223,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.selected_id = bid
         b = self.blocks[bid]
         col = b.color()
-        self.block_title.setText(f"  {b.name.upper()}")
+        title_text = b.name.upper()
+        if bid in ("FX1", "FX2", "FX3", "REV"):
+            slot_label = "FX4" if bid == "REV" else bid
+            title_text = f"{slot_label}  |  {title_text}"
+        
+        self.block_title.setText(f"  {title_text}")
         
         # Иконка эффекта из img_converted/
         img_file = FX_IMG_MAP.get(b.name)
@@ -1690,9 +1695,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
     def _execute_swap(self, bid_a: str, bid_b: str):
         """POST-сваповая отправка MIDI для двух блоков.
         Требует чтобы routing.py уже переставил данные в BlockState.
-        Порядок: OFF обоим → pre/post → fx_type → параметры → ON обоим.
-        Вызывается синхронно в GUI-потоке: mido буферизует, команды улетают раньше чем
-        юзер успеет что-то сделать. threading не нужен.
+        Порядок: OFF обоим → pre/post → fx_type → (пауза) → параметры → ON обоим → re-poll.
         """
         b_a = self.blocks[bid_a]
         b_b = self.blocks[bid_b]
@@ -1714,8 +1717,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._send_fx_type(bid_b)
 
         # 4. Параметры (данные уже переставлены в BlockState)
+        #    Выравниваем params до длины маппинга, чтобы zip не обрезал
         mapping_a = self._get_mapping(bid_a)
         mapping_b = self._get_mapping(bid_b)
+        self._pad_params(b_a, len(mapping_a))
+        self._pad_params(b_b, len(mapping_b))
+
         for cfg, pct in zip(mapping_a, b_a.params):
             if cfg.get("enabled", True):
                 self._send_param(bid_a, cfg, pct)
@@ -1726,6 +1733,17 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         # 5. Восстанавливаем is_on (реальное состояние после свапа)
         b_a.is_on = final_on_a; self._send_on_off(bid_a)
         b_b.is_on = final_on_b; self._send_on_off(bid_b)
+
+        # 6. Re-poll оба блока с задержкой — получить реальные значения с железа
+        #    (процессору нужно время на инициализацию новой модели)
+        QTimer.singleShot(200, lambda: self._query_block_params(bid_a))
+        QTimer.singleShot(350, lambda: self._query_block_params(bid_b))
+
+    @staticmethod
+    def _pad_params(block, target_len: int):
+        """Дополняет block.params до target_len нейтральными значениями (50%)."""
+        while len(block.params) < target_len:
+            block.params.append(50.0)
 
     def _on_toggle_on(self, checked):
         b = self.blocks[self.selected_id]
