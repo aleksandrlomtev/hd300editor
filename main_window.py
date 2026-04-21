@@ -356,17 +356,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         b = self.blocks[bid]
         model_hex = f"{b.model_id:02X}"
         
-        # 1. ПРИОРИТЕТ: РУЧНОЙ МАППИНГ ИЗ UI JSON
-        key = f"{model_hex}_{bid}"
-        if key in self.ui_mappings:
-            mapping = self.ui_mappings[key]
-            for c in mapping:
-                if "slot_id" in c:
-                    b.slot_id = c["slot_id"]
-                    break
-            return mapping
-
-        # 2. ДЛЯ СИСТЕМНЫХ БЛОКОВ (FALLBACK)
+        # 1. СИСТЕМНЫЕ ФИКСИРОВАННЫЕ (FALLBACK)
         fixed = {
             "GATE": [
                 {"name":"Mode",     "hw_idx": 0x0C, "enabled":True, "step":1.0, "slot_id": 0x02, "values": ["Off", "Gate", "NR", "Gate+NR"], "hi_res": False},
@@ -420,9 +410,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                         c["cache_idx"] = HW_TO_IDX[bid][h]
             return res
         
-        # 3. ПОИСК В UI MAPPINGS (JSON ИЕРАРХИЯ)
+        # 2. ПОИСК В UI MAPPINGS (JSON ИЕРАРХИЯ)
         # {model}_{block} -> {model}_FX_OTHER -> fx_config
         key = f"{model_hex}_{bid}"
+        gen_key = f"{model_hex}_FX_OTHER"
         data_list = None
         
         if key in self.ui_mappings:
@@ -435,12 +426,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 data_list = self.fx_config[model_hex].get("params", [])
 
         if not data_list:
-            # Полная тишина в конфигах — генерим пустые 5/6 ручек
-            n = 5 if bid == "FX1" else 6
+            # Полная тишина в конфигах — генерим пустые 6 ручек
+            n = 6
             return [{"name":f"Param {i+1}","hw_idx":i,"enabled":True,"step":1.0} for i in range(n)]
 
-        # 4. СБОРКА МАППИНГА С ЗАПОЛНЕНИЕМ ПУСТОТ (ДО 5 ИЛИ 6)
-        n = 5 if bid == "FX1" else 6
+        # 4. СБОРКА МАППИНГА С ЗАПОЛНЕНИЕМ ПУСТОТ (ДО 6)
+        n = 6
         mapping = []
         
         for i in range(n):

@@ -130,13 +130,10 @@ class MidiEngineMixin:
 
     def _normalize_slot(self, slot_raw):
         """Normalizes raw slot from hardware to internal standard (0x10-0x13 for FX, 0x02 for system)."""
+        # FX live knobs: 0x30-0x33 → 0x10-0x13
         if 0x30 <= slot_raw <= 0x33:
             return 0x10 + (slot_raw - 0x30)
-            
-        # Специальный случай для системных блоков (AMP/GATE) на 0x22
-        if slot_raw == 0x22:
-            return 0x02
-            
+        # FX edit buffer knobs: 0x20-0x23 → 0x10-0x13
         if 0x20 <= slot_raw <= 0x23:
             return 0x10 + (slot_raw - 0x20)
         return slot_raw
@@ -181,16 +178,12 @@ class MidiEngineMixin:
         # Look for block by slot_id
         potential_bids = [bid for bid, b in self.blocks.items() if b.slot_id == slot]
         if not potential_bids:
-            # Specific fallback for some AMP commands on slot 0x02
             if slot == 0x02: target_bid = "AMP" 
         elif len(potential_bids) == 1:
             target_bid = potential_bids[0]
         
-        # Special heuristics
-        if slot_raw == 0x20 and param <= 0x05:
-            # Amp knobs Drive/Bass/Mid... always arrive at 0x20
-            target_bid = "AMP"
-        elif slot_raw == 0x02:
+        # Heuristic: AMP lives ONLY on 0x02, disambiguate by param
+        if slot_raw == 0x02:
             if param in [0x0A, 0x0B, 0x0C]:   target_bid = "GATE"
             elif param in [0x07, 0x08, 0x09]: target_bid = "VOL"
             elif param == 0x12:               target_bid = "WAH"
@@ -368,7 +361,7 @@ class MidiEngineMixin:
         target_slots = []
         
         if bid in ["FX1", "FX2", "FX3", "REV"] and not cfg.get("no_offset"):
-            # Оба слота нужны для живого звука
+            # FX крутилки: base+0x10 (0x20-0x23 edit buffer) + base+0x20 (0x30-0x33 live)
             base = b.slot_id
             target_slots = [base + 0x10, base + 0x20]
         elif send_slot == 0x00 and not cfg.get("no_offset"):

@@ -111,7 +111,7 @@ def parse_full_dump(raw):
     result["wah_pos"]  = round(((r8("BA") & 0x7F) / 127.0) * 100.0, 1)
 
     fx_specs = {
-        "FX1": {"model_addr": "6E", "state_addr": "72", "param_indices": [86,88,90,92,94]},
+        "FX1": {"model_addr": "6E", "state_addr": "72", "param_indices": [84,86,88,90,92,94]},
         "FX2": {"model_addr": "6F", "state_addr": "7A", "param_indices": [96,98,100,102,104,106]},
         "FX3": {"model_addr": "70", "state_addr": "82", "param_indices": [108,110,112,114,116,118]},
     }
