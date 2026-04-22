@@ -1830,9 +1830,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             for i in range(self.cat_list.count()):
                 it = self.cat_list.item(i)
                 if it.text() == target_cat:
-                    self.cat_list.setCurrentItem(it)
-                    # Наполняем список моделей (это безопасно, сигналы заблочены)
-                    self._on_cat_click(it)
+                    # Оптимизация: пересобираем список моделей только если категория РЕАЛЬНО сменилась
+                    if self.cat_list.currentItem() != it:
+                        self.cat_list.setCurrentItem(it)
+                        self._on_cat_click(it)
                     found_cat = True
                     break
             
@@ -1942,15 +1943,17 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._set_preset_modified(True)
         """Массовая отправка MIDI для списка блоков после сдвига/свапа.
         Требует чтобы routing.py уже переставил данные в BlockState.
-        Порядок: OFF всем → pre/post → fx_type → параметры → ON всем → re-poll.
+        Порядок: OFF всем → pre/post → fx_type → пауза → параметры → ON всем → re-poll.
         """
         if not bids: return
 
-        # Сохраняем финальный is_on
+        # Сохраняем финальный is_on и слепок параметров
         final_on = {}
+        snapshots = {}
         for bid in bids:
             final_on[bid] = self.blocks[bid].is_on
             self.blocks[bid].is_on = False
+            snapshots[bid] = list(self.blocks[bid].params)
             self._send_on_off(bid)
 
         # pre/post и fx_type
@@ -1959,27 +1962,41 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         for bid in bids:
             self._send_fx_type(bid)
 
-        # Параметры
-        for bid in bids:
-            b = self.blocks[bid]
-            mapping = self._get_mapping(bid)
-            self._pad_params(b, len(mapping))
-            for cfg, pct in zip(mapping, b.params):
-                if cfg.get("enabled", True):
-                    self._send_param(bid, cfg, pct)
-
-        # Восстанавливаем is_on
-        for bid in bids:
-            self.blocks[bid].is_on = final_on[bid]
-            self._send_on_off(bid)
-
-        # Re-poll с задержкой (дать процессору время прожевать)
-        # Увеличиваем задержку если блоков много
-        delay = 200 + (len(bids) - 2) * 50
-        def repoll_all():
+        # Отложенная отправка параметров
+        def _send_params_delayed():
+            # Параметры
             for bid in bids:
-                self._query_block_params(bid)
-        QTimer.singleShot(delay, repoll_all)
+                b = self.blocks[bid]
+                mapping = self._get_mapping(bid)
+                
+                # Восстанавливаем параметры из слепка, так как они могли 
+                # быть затерты дефолтными значениями из-за race condition 
+                # при раннем опросе во время смены модели
+                b.params = list(snapshots[bid])
+                self._pad_params(b, len(mapping))
+                
+                for cfg, pct in zip(mapping, b.params):
+                    if cfg.get("enabled", True):
+                        self._send_param(bid, cfg, pct)
+
+            # Восстанавливаем is_on
+            for bid in bids:
+                self.blocks[bid].is_on = final_on[bid]
+                self._send_on_off(bid)
+
+            # Re-poll с задержкой (дать процессору время прожевать)
+            delay = 200 + (len(bids) - 2) * 50
+            def repoll_all():
+                for bid in bids:
+                    self._query_block_params(bid)
+            QTimer.singleShot(delay, repoll_all)
+            
+            # Также обновляем UI выбранного блока, чтобы ползунки не застряли на дефолте
+            if self.selected_id in bids:
+                self._render_params()
+
+        # Ждем 250мс пока процессор загрузит новые модели
+        QTimer.singleShot(250, _send_params_delayed)
 
     @staticmethod
     def _pad_params(block, target_len: int):
@@ -2053,14 +2070,14 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         cat = cat_item.text() if cat_item else ""
         
         if cat == "Amp":
-            for i, n in enumerate(self.cats_data["Amp"]):
-                if n == name: b.model_id = i; break
+            for mid, mname in AMP_NAMES.items():
+                if mname == name: b.model_id = mid; break
         elif cat == "Cabinet":
-            for i, n in enumerate(self.cats_data["Cabinet"]):
-                if n == name: b.model_id = i; break
+            for mid, mname in CAB_NAMES.items():
+                if mname == name: b.model_id = mid; break
         elif cat == "Wah":
-            for i, n in enumerate(self.cats_data["Wah"]):
-                if n == name: b.model_id = i; break
+            for mid, mname in WAH_NAMES.items():
+                if mname == name: b.model_id = mid; break
         else:
             for hex_id, cfg in self.fx_config.items():
                 if cfg.get("name") == name:

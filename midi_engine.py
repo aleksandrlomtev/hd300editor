@@ -348,7 +348,7 @@ class MidiEngineMixin:
         if bid == "AMP":
             slot = 0x00
             param = 0x0A 
-            val = b.model_id + 1 
+            val = b.model_id 
         elif bid == "CAB":
             slot = 0x02
             param = 0x13 

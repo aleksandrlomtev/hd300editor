@@ -147,14 +147,19 @@ class ParamRow(QWidget):
             lay.addWidget(self.slider, 1)
             self.combo = None
 
-        self.val_lbl = QLabel()
-        self.val_lbl.setFixedWidth(44)
-        self.val_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.val_lbl.setStyleSheet("color: #ccc; font-size: 9pt;")
-        self._update_text(pct)
-        lay.addWidget(self.val_lbl)
+        if not self.combo:
+            self.val_lbl = QLabel()
+            self.val_lbl.setFixedWidth(44)
+            self.val_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            self.val_lbl.setStyleSheet("color: #ccc; font-size: 9pt;")
+            self._update_text(pct)
+            lay.addWidget(self.val_lbl)
+        else:
+            self.val_lbl = None
 
     def _update_text(self, pct):
+        if not getattr(self, "val_lbl", None):
+            return
         unit = self.cfg.get("unit", "%")
         decimals = self.cfg.get("decimals", 1)
         if unit == "steps":

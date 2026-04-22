@@ -54,25 +54,49 @@
       "name": "DRIVE",
       "hw_idx": 1,
       "enabled": true,
-      "step": 1.0
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
     },
     {
       "name": "BASS",
       "hw_idx": 2,
       "enabled": true,
-      "step": 1.0
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
     },
     {
       "name": "MID",
       "hw_idx": 3,
       "enabled": true,
-      "step": 1.0
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
     },
     {
       "name": "TREBLE",
       "hw_idx": 4,
       "enabled": true,
-      "step": 1.0
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    },
+    {
+      "name": "OUTPUT",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
     }
   ],
   "2F_FX1": [
@@ -192,6 +216,14 @@
       "type": "continuous",
       "unit": "%",
       "slot_id": 18
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
     }
   ],
   "2F_FX2": [
@@ -497,7 +529,7 @@
     {
       "name": "Dummy 6",
       "hw_idx": 0,
-      "enabled": true,
+      "enabled": false,
       "step": 1.0,
       "type": "continuous",
       "unit": "%",
@@ -983,7 +1015,7 @@
     },
     {
       "name": "Dummy 6",
-      "hw_idx": 0,
+      "hw_idx": 6,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
@@ -1047,7 +1079,7 @@
   "38_FX1": [
     {
       "name": "SPEED",
-      "hw_idx": 1,
+      "hw_idx": 0,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1056,7 +1088,7 @@
     },
     {
       "name": "DEPTH",
-      "hw_idx": 2,
+      "hw_idx": 1,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1065,7 +1097,7 @@
     },
     {
       "name": "FDBACK",
-      "hw_idx": 3,
+      "hw_idx": 2,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1074,7 +1106,7 @@
     },
     {
       "name": "STAGE",
-      "hw_idx": 4,
+      "hw_idx": 3,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1258,6 +1290,394 @@
     {
       "name": "Dummy 6",
       "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "10_FX2": [
+    {
+      "name": "DRIVE",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "BASS",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MID",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TREBLE",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "OUTPUT",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "04_FX1": [
+    {
+      "name": "Speed",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Depth",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "CH/VIB",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "discrete",
+      "unit": "%",
+      "options": [
+        "CHORUS",
+        "VIBRATO"
+      ]
+    },
+    {
+      "name": "Tone",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Mix",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "3D_FX2": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "RISE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "VOLSNS",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 6,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "42_FX2": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "SHAPE",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "VOLSNS",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "42_FX1": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "SHAPE",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "VOLSNS",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "18_FX2": [
+    {
+      "name": "DRIVE",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "BASS",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MID",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TREBLE",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "OUTPUT",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "38_FX2": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "FDBACK",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "STAGE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
