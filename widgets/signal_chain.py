@@ -27,7 +27,7 @@ class SignalChainPanel(QFrame):
     block_clicked           = pyqtSignal(str)
     block_right_clicked     = pyqtSignal(str)
     pre_post_changed        = pyqtSignal(str, int)        # bid, new_pp   — Zone 1
-    block_swap_requested    = pyqtSignal(str, str, int)   # src, tgt, new_pp_src — Zone 2
+    block_shift_requested   = pyqtSignal(str, str, int)   # src, tgt (insert_before), new_pp — Zone 2
     block_unconditional_swap = pyqtSignal(str, str)       # src, tgt      — Zone 3
 
     def __init__(self, parent=None):
@@ -280,9 +280,9 @@ class SignalChainPanel(QFrame):
             if tgt_bid and tgt_bid != src_bid:
                 self.block_unconditional_swap.emit(src_bid, tgt_bid)
         elif zone == 2:
-            # Swap with victim (right block of gap) + optional flags
-            if tgt_bid and tgt_bid != src_bid:
-                self.block_swap_requested.emit(src_bid, tgt_bid, new_pp)
+            # Shift operation (Zone 2) - insert src before tgt
+            if tgt_bid != src_bid:
+                self.block_shift_requested.emit(src_bid, tgt_bid if tgt_bid else "", new_pp)
         else:
             # Zone 1: only flip pre/post
             self.pre_post_changed.emit(src_bid, new_pp)
@@ -314,12 +314,13 @@ class SignalChainPanel(QFrame):
             left_of_b2  = b2.mapTo(self, b2.rect().topLeft()).x()
             # Expanded zone: from right of b1 minus margin to left of b2 plus margin
             if (right_of_b1 - _ZONE2_MARGIN) <= drop_x <= (left_of_b2 + _ZONE2_MARGIN):
-                if b2.state.block_id in _SWAP_TARGETS:
-                    return (2, b2.state.block_id)
-                if b1.state.block_id in _SWAP_TARGETS:
-                    return (2, b1.state.block_id)
-                # Both non-swappable — Zone 1
-                return (1, None)
+                # Find the next swappable block at or after this gap
+                insert_before_bid = None
+                for btn in self._buttons[i+1:]:
+                    if btn.state.block_id in _SWAP_TARGETS:
+                        insert_before_bid = btn.state.block_id
+                        break
+                return (2, insert_before_bid)
 
         # Zone 3: hit strictly the central part of the block (outside Zone 2 margin)
         for btn in self._buttons:

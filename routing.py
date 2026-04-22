@@ -84,45 +84,44 @@ def swap_blocks(bid_a: str, bid_b: str, blocks: dict) -> None:
     _swap_content(a, b)
 
 
-def combo_swap(bid_a: str, bid_b: str, new_pp_a: int, new_pp_b: int, blocks: dict) -> None:
-    """Scenario 3: content exchange + setting new pre/post flags.
-    Called for Zone 2 cross-zone drops (PRE ↔ POST via AMP).
-
-    Block A gets new pre/post = new_pp_a,
-    Block B gets new pre/post = new_pp_b.
-    Usually blocks "swap flags" (A takes B's flag, B takes A's flag).
-
-    Args:
-        bid_a, bid_b:       Block IDs
-        new_pp_a, new_pp_b: new pre_post values (0=PRE, 1=POST)
-        blocks:             dict[str, BlockState]
+def apply_visual_order(desired_order: list[str], blocks: dict) -> None:
+    """Safely assigns contents of the desired_order blocks to the physical slots.
+    
+    The physical slots are strictly: FX1, FX2, FX3, REV.
+    desired_order is a list of 4 block IDs (e.g., ["FX3", "FX1", "FX2", "REV"]).
+    This means the slot FX1 will receive the contents of the old FX3,
+    slot FX2 will receive FX1, etc.
+    pre_post and slot_id of each physical slot are untouched during the content copy,
+    but pre_post might be changed later by the caller if needed.
     """
-    a = blocks.get(bid_a)
-    b = blocks.get(bid_b)
-    if a is None or b is None:
+    physical_slots = ["FX1", "FX2", "FX3", "REV"]
+    if len(desired_order) != len(physical_slots):
         return
-    _swap_content(a, b)
-    a.pre_post = new_pp_a
-    b.pre_post = new_pp_b
+
+    # First, make a deep copy of the contents of the blocks in their current state
+    # so we don't accidentally overwrite data we still need to move.
+    contents = {}
+    for bid in physical_slots:
+        b = blocks.get(bid)
+        if b is None: continue
+        
+        c = {}
+        for field in _SWAP_FIELDS:
+            val = getattr(b, field)
+            if isinstance(val, list): c[field] = list(val)
+            elif isinstance(val, dict): c[field] = dict(val)
+            else: c[field] = val
+        contents[bid] = c
+
+    # Now, write the contents into the physical slots based on desired_order
+    for phys_slot, src_bid in zip(physical_slots, desired_order):
+        tgt_b = blocks.get(phys_slot)
+        if tgt_b is None: continue
+        
+        c = contents.get(src_bid)
+        if not c: continue
+        
+        for field in _SWAP_FIELDS:
+            setattr(tgt_b, field, c[field])
 
 
-# ── Zone Detection Utility ──────────────────────────────
-
-def determine_swap_type(bid_src: str, bid_tgt: str, blocks: dict) -> tuple[str, int, int]:
-    """Determines swap type for Zone 2 based on current pre_post flags.
-
-    Returns:
-        (swap_type, new_pp_src, new_pp_tgt)
-        swap_type: 'clean' — same pre_post for both, flags unchanged
-                   'combo' — different pre_post, swap flags
-        new_pp_src/tgt: new values (for 'clean' these are current values)
-    """
-    src = blocks[bid_src]
-    tgt = blocks[bid_tgt]
-
-    if src.pre_post == tgt.pre_post:
-        # Same zone — clean swap without changing flags
-        return ("clean", src.pre_post, tgt.pre_post)
-    else:
-        # Cross-zone — swap flags
-        return ("combo", tgt.pre_post, src.pre_post)

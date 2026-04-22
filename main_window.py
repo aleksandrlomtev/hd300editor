@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QScrollArea, QSplitter,
     QListWidget, QListWidgetItem, QLineEdit,
-    QGraphicsBlurEffect,
+    QGraphicsBlurEffect, QFileDialog
 )
 
 from constants import (
@@ -31,7 +31,8 @@ from constants import FX_NAMES, AMP_NAMES, CAB_NAMES, MATCHED_CABS
 from block_model import BlockState
 from sysex_parser import parse_full_dump, unpack_sysex
 from invalid_wheelchair import warmup_4band_eq # Import shameful hacks
-from routing import flip_prepost, swap_blocks, combo_swap, determine_swap_type
+from routing import flip_prepost, swap_blocks, apply_visual_order
+from preset_utils import h3e_to_sysex_bytes, syx_bytes_to_h3e
 from midi_engine import MidiEngineMixin, MIDO_OK
 from widgets import ParamRow, SignalChainPanel, DiModeButton, SettingsDialog
 
@@ -50,6 +51,11 @@ class MainWindow(MidiEngineMixin, QMainWindow):
     _sig_midi_led  = pyqtSignal(str)
     _sig_log       = pyqtSignal(str)
     _sig_cc        = pyqtSignal(int)
+    _sig_got_preset_no = pyqtSignal(int)
+    _sig_set_modified  = pyqtSignal(bool)
+    _sig_block_state_ui = pyqtSignal(str)
+    _sig_refresh_chain  = pyqtSignal()
+    _sig_update_slider  = pyqtSignal(int, float)
 
     def __init__(self):
         super().__init__()
@@ -120,6 +126,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._is_warming_up = False # Флаг для блокировки эха при прогреве блока
         self._sync_start_time = 0   # Для замера времени загрузки пресета
         
+        self._is_preset_modified = False
+        self._last_clean_dump = None
+        self._ignore_live_modified = False
+        
         # Таймер для дебаунса полной перерисовки
         self._rebuild_debounce = QTimer()
         self._rebuild_debounce.setSingleShot(True)
@@ -139,6 +149,11 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._sig_midi_led.connect(self._midi_led)
         self._sig_log.connect(self._log_ui)
         self._sig_cc.connect(self._on_cc_pedal)
+        self._sig_got_preset_no.connect(self._on_got_preset_no)
+        self._sig_set_modified.connect(self._set_preset_modified)
+        self._sig_block_state_ui.connect(self._update_block_state_ui)
+        self._sig_refresh_chain.connect(self._refresh_chain)
+        self._sig_update_slider.connect(self._update_slider)
 
         self._build_ui()
         self._apply_styles()
@@ -308,6 +323,9 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         
         # Опрашиваем текущие параметры блока при его выборе, чтобы UI был актуальным
         if bid in ("FX1", "FX2", "FX3", "REV", "GATE"):
+            # Временно блокируем взвод звездочки, пока идут ответы на наш опрос (False Detect Protection)
+            self._ignore_live_modified = True
+            QTimer.singleShot(1000, lambda: setattr(self, "_ignore_live_modified", False))
             QTimer.singleShot(80, lambda: self._query_block_params(bid))
 
     def _update_category_filter(self, bid):
@@ -681,14 +699,51 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.preset_lbl.setText(f"PRESET: {display_name}")
 
         for i in range(self.preset_list.count()):
-            if self.preset_list.item(i).data(Qt.ItemDataRole.UserRole) == pc:
+            item = self.preset_list.item(i)
+            self._update_preset_item_visual(item)
+            if item.data(Qt.ItemDataRole.UserRole) == pc:
                 self.preset_list.blockSignals(True)
                 self.preset_list.setCurrentRow(i)
                 self.preset_list.blockSignals(False)
+
+    def _update_preset_item_visual(self, item):
+        pc = item.data(Qt.ItemDataRole.UserRole)
+        is_current = (pc == self.current_preset_num)
+        
+        font = item.font()
+        text = item.text()
+        
+        # Убираем старую звездочку если есть
+        if text.endswith(" *"):
+            text = text[:-2]
+            
+        if is_current:
+            font.setBold(True)
+            if self._is_preset_modified:
+                text += " *"
+        else:
+            font.setBold(False)
+            
+        item.setFont(font)
+        item.setText(text)
+
+    def _set_preset_modified(self, state=True):
+        if self._is_preset_modified == state:
+            return
+        self._is_preset_modified = state
+        # Обновляем визуализацию текущего пресета
+        for i in range(self.preset_list.count()):
+            item = self.preset_list.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) == self.current_preset_num:
+                self._update_preset_item_visual(item)
                 break
 
     def _on_got_preset_no(self, pc):
         """Получили номер пресета от железки — обновляем UI и ставим в очередь запрос дампа."""
+        # Всегда сбрасываем флаг изменений при подтверждении пресета (даже того же самого)
+        self._is_preset_modified = False
+        self._last_clean_dump = None
+
         self._update_preset_ui(pc)
         self._pending_preset = pc
         # Если пришло подтверждение от проца, значит он «очухался»,
@@ -706,10 +761,14 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             return
         cmd = raw[6]
         
-        # Обработка ожиданий (Save/DI)
         if getattr(self, "_waiting_for_save_dump", False):
             self._waiting_for_save_dump = False
             self._do_save_to_processor(raw)
+            return
+
+        if getattr(self, "_waiting_for_export_dump", False):
+            self._waiting_for_export_dump = False
+            self._do_export_preset(raw)
             return
 
         if getattr(self, "_waiting_for_di_dump", False):
@@ -728,6 +787,9 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def _on_prog_chg(self, pc):
         """Аппаратная смена пресета (MIDI C0 XX) — обновляем UI и заводим таймер страховки."""
+        self._is_preset_modified = False
+        self._last_clean_dump = None
+        
         self._sync_start_time = time.time()
         self._update_preset_ui(pc)
         self._log(f"Пресет изменён: {self.preset_lbl.text().split(': ')[-1]} (#{pc}) [Wait for 0x62 or fallback]")
@@ -779,9 +841,38 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             return
             
         self._dump_retry_count = 0  # При успешном парсинге сбрасываем счётчик
+        
+        # Детекция изменений (сравнение распакованного дампа)
+        current_u = data.get("_u")
+        if current_u:
+            if self._last_clean_dump is None:
+                # Базовое состояние после переключения или импорта
+                self._last_clean_dump = list(current_u)
+                
+                # Если это был импорт, мы должны сохранить статус "изменено"
+                if getattr(self, "_imported_flag_pending", False):
+                    self._set_preset_modified(True)
+                    self._imported_flag_pending = False
+                else:
+                    self._is_preset_modified = False
+            else:
+                if list(current_u) != self._last_clean_dump:
+                    self._set_preset_modified(True)
+
         self.preset_name = data["preset_name"]
         self._update_preset_ui(self.current_preset_num, name=self.preset_name)
         
+        # Обновляем имя в списке пресетов (важно при импорте или переименовании)
+        idx = self.current_preset_num
+        for i in range(self.preset_list.count()):
+            item = self.preset_list.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) == idx:
+                bank = (idx // 4) + 1
+                sub  = ["A","B","C","D"][idx % 4]
+                item.setText(f"{bank:02d}{sub} - {self.preset_name}")
+                self._update_preset_item_visual(item)
+                break
+
         self.preset_cache[str(self.current_preset_num)] = self.preset_name
         self._save_preset_cache()
 
@@ -852,6 +943,71 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         if getattr(self, "sync_on_launch", False) and not getattr(self, "_initial_sync_done", False):
             self._initial_sync_done = True
             QTimer.singleShot(500, self._start_preset_sync)
+
+    def _on_import_preset(self):
+        if not self.midi_out:
+            self._log("❌ Cannot import: MIDI not connected")
+            return
+        
+        filename, _ = QFileDialog.getOpenFileName(self, "Import Preset", "", "Presets (*.h3e *.syx);;All Files (*)")
+        if not filename: return
+        
+        try:
+            if filename.lower().endswith(".h3e"):
+                with open(filename, "rb") as f:
+                    h3e_bytes = f.read()
+                chan = getattr(self, "midi_channel", 0)
+                sysex = h3e_to_sysex_bytes(h3e_bytes, channel=chan)
+            elif filename.lower().endswith(".syx"):
+                with open(filename, "rb") as f:
+                    sysex = f.read()
+            else:
+                return
+
+            if len(sysex) > 0:
+                payload = sysex
+                if payload[0] == 0xF0: payload = payload[1:]
+                if payload[-1] == 0xF7: payload = payload[:-1]
+                
+                self._send_raw(list(payload))
+                self._imported_flag_pending = True
+                self._sig_set_modified.emit(True) # Import is definitely a change
+                self._log(f"📥 Imported: {os.path.basename(filename)}")
+                # Дадим процессору время проглотить дамп, затем запросим его для обновления UI
+                QTimer.singleShot(600, self._request_dump)
+        except Exception as e:
+            self._log(f"❌ Import error: {e}")
+
+    def _on_export_preset(self):
+        if not getattr(self, "blocks", None) or not self.midi_out:
+            self._log("❌ Cannot export: MIDI not connected or not ready")
+            return
+            
+        filename, _ = QFileDialog.getSaveFileName(self, "Export Preset", "", "H3E Preset (*.h3e);;SysEx Dump (*.syx)")
+        if not filename: return
+        
+        self._export_filename = filename
+        self._waiting_for_export_dump = True
+        self._request_dump()
+        self._log("📤 Requesting fresh edit buffer dump for export...")
+
+    def _do_export_preset(self, raw_sysex):
+        try:
+            filename = getattr(self, "_export_filename", "exported.h3e")
+            if filename.lower().endswith(".h3e"):
+                h3e_bytes = syx_bytes_to_h3e(bytes(raw_sysex))
+                with open(filename, "wb") as f:
+                    f.write(h3e_bytes)
+            else:
+                with open(filename, "wb") as f:
+                    f.write(bytes(raw_sysex))
+            self._log(f"📤 Exported successfully: {os.path.basename(filename)}")
+            
+            # Поскольку мы перехватили дамп, UI не обновится (хотя он и так актуален)
+            # Просто чтобы снять флаги (например _is_warming_up)
+            self._parse_dump(raw_sysex)
+        except Exception as e:
+            self._log(f"❌ Export error: {e}")
 
     def _start_preset_sync(self):
         self._sync_mode = True
@@ -1255,7 +1411,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.chain_panel.block_clicked.connect(self._select_block)
         self.chain_panel.block_right_clicked.connect(self._on_block_right_click)
         self.chain_panel.pre_post_changed.connect(self._on_prepost_drop)
-        self.chain_panel.block_swap_requested.connect(self._on_swap_requested)
+        self.chain_panel.block_shift_requested.connect(self._on_shift_requested)
         self.chain_panel.block_unconditional_swap.connect(self._on_unconditional_swap)
         main.addWidget(self.chain_panel)
 
@@ -1274,7 +1430,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         # Preset list
         self.side_presets = QFrame()
         self.side_presets.setObjectName("sidePanel")
-        self.side_presets.setFixedWidth(200)
+        self.side_presets.setFixedWidth(220)
         ll = QVBoxLayout(self.side_presets)
         ll.setContentsMargins(8, 8, 8, 8)
         
@@ -1282,21 +1438,43 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.lbl_p = QLabel("PRESETS")
         self.lbl_p.setStyleSheet("color:#666; font-size:8pt; font-weight:bold;")
         hdr_lay.addWidget(self.lbl_p)
-        
+        hdr_lay.addStretch()
+        ll.addLayout(hdr_lay)
+
+        # Import / Export
+        io_lay = QHBoxLayout()
+        self.btn_import = QPushButton("📥 Import")
+        self.btn_import.setToolTip("Import .h3e or .syx preset")
+        self.btn_import.setFixedHeight(22)
+        self.btn_import.setStyleSheet("background: #252830; font-size: 7pt; border-radius: 4px;")
+        self.btn_import.clicked.connect(self._on_import_preset)
+        io_lay.addWidget(self.btn_import)
+
+        self.btn_export = QPushButton("📤 Export")
+        self.btn_export.setToolTip("Export current edit buffer to .h3e or .syx")
+        self.btn_export.setFixedHeight(22)
+        self.btn_export.setStyleSheet("background: #252830; font-size: 7pt; border-radius: 4px;")
+        self.btn_export.clicked.connect(self._on_export_preset)
+        io_lay.addWidget(self.btn_export)
+        ll.addLayout(io_lay)
+
+        # Sync / Send
+        sync_lay = QHBoxLayout()
         self.btn_sync_all = QPushButton("↻ Receive All")
         self.btn_sync_all.setToolTip("Download all 128 preset names from the processor")
         self.btn_sync_all.setFixedHeight(22)
         self.btn_sync_all.setStyleSheet("background: #252830; font-size: 7pt; padding: 2px 6px; border-radius: 4px;")
         self.btn_sync_all.clicked.connect(self._start_preset_sync)
-        hdr_lay.addWidget(self.btn_sync_all)
+        sync_lay.addWidget(self.btn_sync_all)
 
         self.btn_send_active = QPushButton("▲ Send Active")
         self.btn_send_active.setToolTip("Save current preset to the active slot on the processor")
         self.btn_send_active.setFixedHeight(22)
         self.btn_send_active.setStyleSheet("background: #252830; font-size: 7pt; padding: 2px 6px; border-radius: 4px;")
         self.btn_send_active.clicked.connect(self._save_active_preset)
-        hdr_lay.addWidget(self.btn_send_active)
-        ll.addLayout(hdr_lay)
+        sync_lay.addWidget(self.btn_send_active)
+        ll.addLayout(sync_lay)
+
         
         self.preset_list = QListWidget()
         self.preset_list.setObjectName("presetList")
@@ -1472,6 +1650,46 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 border-left: 3px solid #d6923c;
                 font-weight: bold;
             }}
+            
+            /* --- СТИЛЬНЫЕ СКРОЛЛБАРЫ --- */
+            QScrollBar:vertical {{
+                border: none;
+                background: transparent;
+                width: 8px;
+                margin: 0px;
+            }}
+            QScrollBar::handle:vertical {{
+                background: #333;
+                min-height: 20px;
+                border-radius: 4px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background: #d6923c;
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                height: 0px;
+            }}
+            QScrollBar:horizontal {{
+                border: none;
+                background: transparent;
+                height: 8px;
+                margin: 0px;
+            }}
+            QScrollBar::handle:horizontal {{
+                background: #333;
+                min-width: 20px;
+                border-radius: 4px;
+            }}
+            QScrollBar::handle:horizontal:hover {{
+                background: #d6923c;
+            }}
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+                width: 0px;
+            }}
+            QScrollBar::add-page, QScrollBar::sub-page {{
+                background: none;
+            }}
+            
             QListWidget::item:selected:!active {{
                 background: rgba(214, 146, 60, 25);
             }}
@@ -1657,78 +1875,111 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._refresh_chain()  # Перестраиваем цепочку — блок перепрыгнул PRE/POST
         self._select_block(bid)
 
-    def _on_swap_requested(self, src_bid: str, tgt_bid: str, new_pp_hint: int):
-        """Zone 2: вставка между блоками (swap + новые флаги)."""
+    def _on_shift_requested(self, src_bid: str, insert_before_bid: str, new_pp_hint: int):
+        """Zone 2: вставка со сдвигом остальных блоков (Free Routing)."""
         if not getattr(self, "experimental_free_routing", False):
-            # Если Free Routing выключен — просто флипаем pre_post (имитируем Zone 1)
             return self._on_prepost_drop(src_bid, new_pp_hint)
 
-        old_tgt_pp = self.blocks[tgt_bid].pre_post
-        combo_swap(src_bid, tgt_bid, old_tgt_pp, new_pp_hint, self.blocks)
+        swappable = ["FX1", "FX2", "FX3", "REV"]
+        
+        # 1. Запоминаем желаемый pre_post для каждого контента
+        desired_pp = {}
+        for bid in swappable:
+            desired_pp[bid] = new_pp_hint if bid == src_bid else self.blocks[bid].pre_post
 
-        self._execute_swap(src_bid, tgt_bid)
+        # 2. Выстраиваем желаемую визуальную последовательность
+        pre_fx  = [bid for bid in swappable if self.blocks[bid].pre_post == 0]
+        post_fx = [bid for bid in swappable if self.blocks[bid].pre_post == 1]
+        v_order = pre_fx + post_fx
+        
+        if src_bid in v_order:
+            v_order.remove(src_bid)
+            
+        if insert_before_bid and insert_before_bid in v_order:
+            idx = v_order.index(insert_before_bid)
+            v_order.insert(idx, src_bid)
+        else:
+            v_order.append(src_bid)
+
+        # 3. Вычисляем физические слоты, которые реально изменятся
+        changed_slots = []
+        for phys_slot, content_bid in zip(swappable, v_order):
+            if content_bid != phys_slot or desired_pp[content_bid] != self.blocks[phys_slot].pre_post:
+                changed_slots.append(phys_slot)
+
+        if not changed_slots:
+            return
+
+        # 4. Применяем контент в физические слоты
+        apply_visual_order(v_order, self.blocks)
+        
+        # 5. Применяем pre_post
+        for phys_slot, content_bid in zip(swappable, v_order):
+            self.blocks[phys_slot].pre_post = desired_pp[content_bid]
+
+        # 6. Отправляем MIDI
+        self._execute_shift(changed_slots)
         self._refresh_chain()
-        self._select_block(src_bid)
-        self._log(f"⇄ Zone-2 insert: {src_bid} ↔ {tgt_bid} (PP: {old_tgt_pp}, {new_pp_hint})")
+        
+        # Визуально выделяем физический слот, куда упал наш контент
+        new_phys_slot = swappable[v_order.index(src_bid)]
+        self._select_block(new_phys_slot)
+        self._log(f"⇄ Zone-2 shift: {src_bid} moved -> {new_phys_slot} (Changed: {changed_slots})")
 
     def _on_unconditional_swap(self, src_bid: str, tgt_bid: str):
-        """Zone 3: drop прямо на блок, чистый свап, pre/post не трожем."""
+        """Zone 3: drop прямо на блок, чистый свап, pre/post не трогаем."""
         if not getattr(self, "experimental_free_routing", False):
-            # Если Free Routing выключен — игнорируем безусловный свап
             return
 
         swap_blocks(src_bid, tgt_bid, self.blocks)
-        self._execute_swap(src_bid, tgt_bid)
+        self._execute_shift([src_bid, tgt_bid])
+        self._set_preset_modified(True)
         self._refresh_chain()
-        self._select_block(src_bid)
+        self._select_block(tgt_bid)
         self._log(f"⇄ Zone-3 swap: {src_bid} ↔ {tgt_bid} (unconditional)")
 
-    def _execute_swap(self, bid_a: str, bid_b: str):
-        """POST-сваповая отправка MIDI для двух блоков.
+    def _execute_shift(self, bids: list[str]):
+        self._set_preset_modified(True)
+        """Массовая отправка MIDI для списка блоков после сдвига/свапа.
         Требует чтобы routing.py уже переставил данные в BlockState.
-        Порядок: OFF обоим → pre/post → fx_type → (пауза) → параметры → ON обоим → re-poll.
+        Порядок: OFF всем → pre/post → fx_type → параметры → ON всем → re-poll.
         """
-        b_a = self.blocks[bid_a]
-        b_b = self.blocks[bid_b]
+        if not bids: return
 
-        # Сохраняем финальный is_on — routing.py уже переставил его
-        final_on_a = b_a.is_on
-        final_on_b = b_b.is_on
+        # Сохраняем финальный is_on
+        final_on = {}
+        for bid in bids:
+            final_on[bid] = self.blocks[bid].is_on
+            self.blocks[bid].is_on = False
+            self._send_on_off(bid)
 
-        # 1. OFF обоим блокам
-        b_a.is_on = False; self._send_on_off(bid_a)
-        b_b.is_on = False; self._send_on_off(bid_b)
+        # pre/post и fx_type
+        for bid in bids:
+            self._send_pre_post(bid)
+        for bid in bids:
+            self._send_fx_type(bid)
 
-        # 2. pre/post
-        self._send_pre_post(bid_a)
-        self._send_pre_post(bid_b)
+        # Параметры
+        for bid in bids:
+            b = self.blocks[bid]
+            mapping = self._get_mapping(bid)
+            self._pad_params(b, len(mapping))
+            for cfg, pct in zip(mapping, b.params):
+                if cfg.get("enabled", True):
+                    self._send_param(bid, cfg, pct)
 
-        # 3. Тип эффекта (model_id)
-        self._send_fx_type(bid_a)
-        self._send_fx_type(bid_b)
+        # Восстанавливаем is_on
+        for bid in bids:
+            self.blocks[bid].is_on = final_on[bid]
+            self._send_on_off(bid)
 
-        # 4. Параметры (данные уже переставлены в BlockState)
-        #    Выравниваем params до длины маппинга, чтобы zip не обрезал
-        mapping_a = self._get_mapping(bid_a)
-        mapping_b = self._get_mapping(bid_b)
-        self._pad_params(b_a, len(mapping_a))
-        self._pad_params(b_b, len(mapping_b))
-
-        for cfg, pct in zip(mapping_a, b_a.params):
-            if cfg.get("enabled", True):
-                self._send_param(bid_a, cfg, pct)
-        for cfg, pct in zip(mapping_b, b_b.params):
-            if cfg.get("enabled", True):
-                self._send_param(bid_b, cfg, pct)
-
-        # 5. Восстанавливаем is_on (реальное состояние после свапа)
-        b_a.is_on = final_on_a; self._send_on_off(bid_a)
-        b_b.is_on = final_on_b; self._send_on_off(bid_b)
-
-        # 6. Re-poll оба блока с задержкой — получить реальные значения с железа
-        #    (процессору нужно время на инициализацию новой модели)
-        QTimer.singleShot(200, lambda: self._query_block_params(bid_a))
-        QTimer.singleShot(350, lambda: self._query_block_params(bid_b))
+        # Re-poll с задержкой (дать процессору время прожевать)
+        # Увеличиваем задержку если блоков много
+        delay = 200 + (len(bids) - 2) * 50
+        def repoll_all():
+            for bid in bids:
+                self._query_block_params(bid)
+        QTimer.singleShot(delay, repoll_all)
 
     @staticmethod
     def _pad_params(block, target_len: int):

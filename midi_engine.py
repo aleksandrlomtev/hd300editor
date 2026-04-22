@@ -109,7 +109,7 @@ class MidiEngineMixin:
             # Ответ с номером текущего пресета ТОЛЬКО если sub-type 04:07
             if len(raw) >= 13 and raw[8] == 0x04 and raw[9] == 0x07:
                 preset_no = raw[12]
-                self._on_got_preset_no(preset_no)
+                self._sig_got_preset_no.emit(preset_no)
             else:
                 self._parse_live(raw)
         elif cmd == 0x63:
@@ -126,6 +126,8 @@ class MidiEngineMixin:
         
         # Request dump for 100% synchronization, as this could be routing or bypass
         self._log(f"[STATE] Hardware state changed (CMD {raw[6]:02X}, Slot {slot_raw:02X}). Syncing...")
+        if not getattr(self, "_is_surveying", False):
+            self._sig_set_modified.emit(True)
         self._trigger_live_sync()
 
     def _normalize_slot(self, slot_raw):
@@ -172,6 +174,7 @@ class MidiEngineMixin:
            (slot_raw == 0x00 and param == 0x0A) or \
            (slot_raw == 0x02 and param == 0x13):
             self._log(f"[LIVE] Important State/Model Changed (Slot {slot_raw:02X}, Param {param:02X}). Syncing...")
+            # Модель сменилась - это точно изменение, но лучше довериться дампу
             self._trigger_live_sync()
             return
         
@@ -197,9 +200,13 @@ class MidiEngineMixin:
             if target_bid == "AMP" and param == 0x14:
                 b = self.blocks.get("AMP")
                 if b:
-                    b.is_on = bool(val & 0x01)
-                    self._update_block_state_ui("AMP")
-                    self._refresh_chain()
+                    new_on = bool(val & 0x01)
+                    if b.is_on != new_on:
+                        b.is_on = new_on
+                        if not getattr(self, "_is_surveying", False):
+                            self._sig_set_modified.emit(True)
+                        self._sig_block_state_ui.emit("AMP")
+                        self._sig_refresh_chain.emit()
                 return
 
             b = self.blocks.get(target_bid)
@@ -212,25 +219,37 @@ class MidiEngineMixin:
             
             if is_state_slot:
                 if param == 0x01:
-                    b.pre_post = 1 if val > 0 else 0
-                    self._update_block_state_ui(target_bid)
-                    self._log(f"[LIVE-S] {target_bid} ({b.name}) ROUTING={'POST' if b.pre_post else 'PRE'}")
-                    self._refresh_chain()
+                    new_pp = 1 if val > 0 else 0
+                    if b.pre_post != new_pp:
+                        b.pre_post = new_pp
+                        if not getattr(self, "_is_surveying", False):
+                            self._sig_set_modified.emit(True)
+                        self._sig_block_state_ui.emit(target_bid)
+                        self._log(f"[LIVE-S] {target_bid} ({b.name}) ROUTING={'POST' if b.pre_post else 'PRE'}")
+                        self._sig_refresh_chain.emit()
                     return
                 elif param == 0x03:
-                    b.is_on = (val > 0)
-                    self._update_block_state_ui(target_bid)
-                    self._log(f"[LIVE-S] {target_bid} ({b.name}) ON={b.is_on}")
-                    self._refresh_chain()
+                    new_on = (val > 0)
+                    if b.is_on != new_on:
+                        b.is_on = new_on
+                        if not getattr(self, "_is_surveying", False):
+                            self._sig_set_modified.emit(True)
+                        self._sig_block_state_ui.emit(target_bid)
+                        self._log(f"[LIVE-S] {target_bid} ({b.name}) ON={b.is_on}")
+                        self._sig_refresh_chain.emit()
                     return
                 return
             
             # Для VOL (Pre/Post) на слоте 02
             if slot_raw == 0x02 and param == 0x07:
-                self.blocks["VOL"].pre_post = 1 if val > 0 else 0
-                self._update_block_state_ui("VOL")
-                self._log(f"[LIVE-S] VOL ROUTING={'POST' if self.blocks['VOL'].pre_post else 'PRE'}")
-                self._refresh_chain()
+                new_pp = 1 if val > 0 else 0
+                if self.blocks["VOL"].pre_post != new_pp:
+                    self.blocks["VOL"].pre_post = new_pp
+                    if not getattr(self, "_is_surveying", False):
+                        self._sig_set_modified.emit(True)
+                    self._sig_block_state_ui.emit("VOL")
+                    self._log(f"[LIVE-S] VOL ROUTING={'POST' if self.blocks['VOL'].pre_post else 'PRE'}")
+                    self._sig_refresh_chain.emit()
                 return
             
             # Поиск параметра в маппинге
@@ -279,10 +298,18 @@ class MidiEngineMixin:
 
             pct = max(0.0, min(100.0, pct))
             if p_idx < len(b.params):
-                b.params[p_idx] = pct
-                if target_bid == self.selected_id:
-                    self._update_slider(param, pct)
-                self._log(f"[LIVE] {target_bid} ({b.name}) P{param:02X} = {pct:.1f}%")
+                old_val = b.params[p_idx]
+                # Сравниваем с допуском 0.1%, чтобы не триггерить флаг на холостые запросы
+                if abs(old_val - pct) > 0.1:
+                    b.params[p_idx] = pct
+                    
+                    # Если мы НЕ в режиме опроса (опрос Pitch Glide или выбор блока)
+                    if not getattr(self, "_is_surveying", False) and not getattr(self, "_ignore_live_modified", False):
+                        self._sig_set_modified.emit(True)
+                        
+                    if target_bid == self.selected_id:
+                        self._sig_update_slider.emit(param, pct)
+                    self._log(f"[LIVE] {target_bid} ({b.name}) P{param:02X} = {pct:.1f}%")
 
     # ══ Построение и отправка SysEx ══════════════
 
@@ -333,6 +360,7 @@ class MidiEngineMixin:
             
         data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         self._send_raw(data)
+        self._set_preset_modified(True)
         self._log(f"→ {bid} TYPE: 0x{val:02X} (Slot {slot:02X}, P{param:02X})")
 
     def _send_on_off(self, bid):
@@ -350,6 +378,7 @@ class MidiEngineMixin:
         
         data = self._make_sysex(slot, param, b.pre_post, hi_res=False)
         self._send_raw(data)
+        self._set_preset_modified(True)
         self._log(f"→ PRE/POST {bid}: {'POST' if b.pre_post else 'PRE'} (Slot {slot:02X}, P={param:02X})")
 
     def _send_param(self, bid, cfg, pct):
@@ -406,6 +435,7 @@ class MidiEngineMixin:
             data_63 = self._make_sysex(s, hw_idx, val, hi_res=hi_res, cmd=0x63)
             self._send_raw(data_63)
 
+        self._set_preset_modified(True)
         self._log(f"→ PARAM {bid} P{hw_idx:02X} = {val} ({'HI' if hi_res else 'LO'}) [63 live]")
         
         # Запоминаем для отложенного коммита
@@ -437,6 +467,7 @@ class MidiEngineMixin:
             data = self._make_sysex(slot, 0x03, val, hi_res=False, cmd=0x63)
         
         self._send_raw(data)
+        self._set_preset_modified(True)
         b.is_on = is_on
         self._update_block_state_ui(bid)
         self._refresh_chain()
