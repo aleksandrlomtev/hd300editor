@@ -113,9 +113,6 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._dump_debounce.setSingleShot(True)
         self._dump_debounce.timeout.connect(self._debounced_dump)
         self._pending_preset = 0
-
-        # Состояние Learn Mode
-        self._learning_row = None
         
         self._last_rendered_bid = None
         self._last_rendered_model = None
@@ -2108,20 +2105,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._refresh_chain()
         self._select_block(bid)
 
-    def _on_learn_request(self, row):
-        """Learn button handler in ParamRow"""
-        if self._learning_row:
-            self._learning_row.btn_learn.setChecked(False)
-            self._learning_row.setStyleSheet("")
-            
-        if row.btn_learn.isChecked():
-            self._learning_row = row
-            row.setStyleSheet("ParamRow { background: #d6923c44; border: 1px solid #d6923c; }")
-            self._log(f"👂 Learn Mode: Turn a knob on HD300 for '{row.cfg['name']}'")
-        else:
-            self._learning_row = None
-            row.setStyleSheet("")
-            self._log("Learn Mode cancelled.")
+
 
     def _on_preset_dclick(self, item):
         pc = item.data(Qt.ItemDataRole.UserRole)

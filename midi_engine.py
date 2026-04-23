@@ -150,21 +150,6 @@ class MidiEngineMixin:
         # 21-битное значение
         val = (v1 << 14) | (v2 << 7) | v3
 
-        # 1. Learn Mode (in Mapping Mode)
-        if self._learning_row:
-            # SAVE NORMALIZED ID to avoid raw/norm collisions
-            norm_id = self._normalize_slot(slot_raw)
-            self._learning_row.cfg["hw_idx"] = param
-            self._learning_row.idx_spin.setValue(param)
-            self._learning_row.cfg["slot_id"] = norm_id # Always 0x10-0x13 here
-            if self.selected_id in self.blocks:
-                self.blocks[self.selected_id].slot_id = norm_id
-            self._learning_row.btn_learn.setChecked(False)
-            self._learning_row.setStyleSheet("") 
-            self._learning_row = None
-            self._log(f"✅ Learn: Bound to Slot {norm_id:02X} (Raw: {slot_raw:02X}), Param {param:02X}")
-            return
-
         # 2. NORMALIZATION AND BLOCK IDENTIFICATION
         target_bid = None
         slot = self._normalize_slot(slot_raw)

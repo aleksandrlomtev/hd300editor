@@ -487,32 +487,34 @@
   ],
   "04_FX2": [
     {
-      "name": "Depth",
-      "hw_idx": 1,
+      "name": "Speed",
+      "hw_idx": 0,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
       "unit": "Hz"
     },
     {
+      "name": "Depth",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "discrete_steps": 0
+    },
+    {
       "name": "CH/VIB",
       "hw_idx": 2,
       "enabled": true,
       "step": 1.0,
-      "type": "continuous",
-      "unit": "%"
+      "type": "discrete",
+      "unit": "%",
+      "discrete_steps": 2
     },
     {
       "name": "Tone",
       "hw_idx": 3,
-      "enabled": true,
-      "step": 1.0,
-      "type": "discrete",
-      "unit": "%"
-    },
-    {
-      "name": "Tone",
-      "hw_idx": 4,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -539,7 +541,7 @@
   "36_FX2": [
     {
       "name": "SPEED",
-      "hw_idx": 1,
+      "hw_idx": 0,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -547,7 +549,7 @@
     },
     {
       "name": "DEPTH",
-      "hw_idx": 2,
+      "hw_idx": 1,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -555,7 +557,7 @@
     },
     {
       "name": "FDBACK",
-      "hw_idx": 3,
+      "hw_idx": 2,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -563,7 +565,7 @@
     },
     {
       "name": "MANUAL",
-      "hw_idx": 4,
+      "hw_idx": 3,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1363,7 +1365,7 @@
     },
     {
       "name": "Depth",
-      "hw_idx": 2,
+      "hw_idx": 1,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1372,7 +1374,7 @@
     },
     {
       "name": "CH/VIB",
-      "hw_idx": 3,
+      "hw_idx": 2,
       "enabled": true,
       "step": 1.0,
       "type": "discrete",
@@ -1380,11 +1382,12 @@
       "options": [
         "CHORUS",
         "VIBRATO"
-      ]
+      ],
+      "discrete_steps": 2
     },
     {
       "name": "Tone",
-      "hw_idx": 4,
+      "hw_idx": 3,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1659,6 +1662,61 @@
     },
     {
       "name": "STAGE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "36_FX1": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "FDBACK",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MANUAL",
       "hw_idx": 3,
       "enabled": true,
       "step": 1.0,

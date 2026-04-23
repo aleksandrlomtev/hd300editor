@@ -68,15 +68,22 @@ class ParamRow(QWidget):
             self.idx_spin.valueChanged.connect(self._on_idx)
             lay.addWidget(self.idx_spin)
             
-            # 2. BINDING (Learn)
-            self.btn_learn = QPushButton("LEARN")
-            self.btn_learn.setFixedWidth(65)
-            self.btn_learn.setFixedHeight(24)
-            self.btn_learn.setCheckable(True)
-            self.btn_learn.setToolTip("Learn: Click and turn a knob on the processor")
-            self.btn_learn.setStyleSheet(f"QPushButton {{ background: #333; font-size: 7pt; font-weight: bold; }} QPushButton:checked {{ background: {self.color}; color: white; border-radius: 4px; }}")
-            self.btn_learn.clicked.connect(self._on_learn)
-            lay.addWidget(self.btn_learn)
+            # 2. BINDING (Mode)
+            self.mode_combo = QComboBox()
+            self.mode_combo.addItem("Linear", 0)
+            for s in range(2, 19):
+                self.mode_combo.addItem(f"{s} steps", s)
+            
+            cur_steps = self.cfg.get("discrete_steps", 0)
+            if 2 <= cur_steps <= 18:
+                self.mode_combo.setCurrentIndex(cur_steps - 1)
+            else:
+                self.mode_combo.setCurrentIndex(0)
+                
+            self.mode_combo.setFixedWidth(85)
+            self.mode_combo.setStyleSheet("background: #1a1a1a; border: 1px solid #333; font-size: 7pt;")
+            self.mode_combo.currentIndexChanged.connect(self._on_mode_changed)
+            lay.addWidget(self.mode_combo)
 
             # 3. METADATA (STEP)
             self.step_spin = QDoubleSpinBox()
@@ -118,8 +125,17 @@ class ParamRow(QWidget):
             self.slider = None
         else:
             self.slider = QSlider(Qt.Orientation.Horizontal)
-            self.slider.setRange(0, 1000)
-            self.slider.setValue(int(pct * 10))
+            
+            d_steps = self.cfg.get("discrete_steps", 0)
+            if d_steps > 1:
+                self.slider.setRange(0, d_steps - 1)
+                self.slider.setValue(int(round((pct / 100.0) * (d_steps - 1))))
+                self.slider.setSingleStep(1)
+                self.slider.setPageStep(1)
+            else:
+                self.slider.setRange(0, 1000)
+                self.slider.setValue(int(pct * 10))
+                
             self.slider.setMaximumWidth(400)
             self.slider.valueChanged.connect(self._on_slide)
             self.slider.setStyleSheet(f"""
@@ -160,6 +176,13 @@ class ParamRow(QWidget):
     def _update_text(self, pct):
         if not getattr(self, "val_lbl", None):
             return
+            
+        d_steps = self.cfg.get("discrete_steps", 0)
+        if d_steps > 1:
+            idx = int(round((pct / 100.0) * (d_steps - 1)))
+            self.val_lbl.setText(f"{idx + 1}")
+            return
+
         unit = self.cfg.get("unit", "%")
         decimals = self.cfg.get("decimals", 1)
         if unit == "steps":
@@ -176,7 +199,11 @@ class ParamRow(QWidget):
 
     def _on_slide(self, v):
         self._last_user_edit = time.time()
-        pct = v / 10.0
+        d_steps = self.cfg.get("discrete_steps", 0)
+        if d_steps > 1:
+            pct = (v / (d_steps - 1)) * 100.0
+        else:
+            pct = v / 10.0
         self._update_text(pct)
         self.value_changed.emit(self.cfg.get("hw_idx", 0), pct)
 
@@ -191,7 +218,26 @@ class ParamRow(QWidget):
     def _on_name(self, t):   self.cfg["name"]    = t
     def _on_idx(self, v):    self.cfg["hw_idx"]  = v
     def _on_enable(self, v): self.cfg["enabled"] = v
-    def _on_learn(self):     self.learn_clicked.emit(self)
+    def _on_mode_changed(self, idx):
+        val = self.mode_combo.currentData()
+        self.cfg["discrete_steps"] = val
+        # Если мы в режиме маппинга, то слайдер не обязательно перерисовывать сразу, 
+        # но для наглядности можно было бы. Однако маппинг мод обычно статический.
+        # Но если мы хотим чтобы слайдер СРАЗУ стал дискретным:
+        if self.slider:
+            if val > 1:
+                self.slider.setRange(0, val - 1)
+                # Сохраняем текущий pct
+                pct = self._target_pct
+                self.slider.blockSignals(True)
+                self.slider.setValue(int(round((pct / 100.0) * (val - 1))))
+                self.slider.blockSignals(False)
+            else:
+                self.slider.setRange(0, 1000)
+                self.slider.blockSignals(True)
+                self.slider.setValue(int(self._target_pct * 10))
+                self.slider.blockSignals(False)
+        self._update_text(self._target_pct)
 
     def prepare_for_deletion(self):
         """Stops all processes before deleting the widget."""
@@ -207,7 +253,12 @@ class ParamRow(QWidget):
         self._target_pct = pct
         if self.slider:
             self.slider.blockSignals(True)
-            self.slider.setValue(int(pct * 10))
+            d_steps = self.cfg.get("discrete_steps", 0)
+            if d_steps > 1:
+                idx = int(round((pct / 100.0) * (d_steps - 1)))
+                self.slider.setValue(idx)
+            else:
+                self.slider.setValue(int(pct * 10))
             self.slider.blockSignals(False)
         elif self.combo:
             vals = self.cfg.get("values", [])
