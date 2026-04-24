@@ -510,7 +510,7 @@
       "step": 1.0,
       "type": "discrete",
       "unit": "%",
-      "discrete_steps": 2
+      "discrete_steps": 0
     },
     {
       "name": "Tone",
@@ -530,7 +530,7 @@
     },
     {
       "name": "Dummy 6",
-      "hw_idx": 0,
+      "hw_idx": 4,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
@@ -1740,6 +1740,355 @@
       "step": 1.0,
       "type": "continuous",
       "unit": "%"
+    }
+  ],
+  "5E_FX1": [
+    {
+      "name": "PHASE",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 2
+    },
+    {
+      "name": "GAIN",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "OUTPUT",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "HPF",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 1,
+      "max_disp": 500,
+      "decimals": 0
+    },
+    {
+      "name": "LPF",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 5000,
+      "max_disp": 20000,
+      "decimals": 0
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "5E_FX3": [
+    {
+      "name": "PHASE",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 2
+    },
+    {
+      "name": "GAIN",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "OUTPUT",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "HPF",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 1,
+      "max_disp": 500,
+      "decimals": 0
+    },
+    {
+      "name": "LPF",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 5000,
+      "max_disp": 20000,
+      "decimals": 0
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "07_FX3": [
+    {
+      "name": "TIME",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "FDBACK",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "BASS",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TREBLE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "04_FX3": [
+    {
+      "name": "Speed",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Depth",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "CH/VIB",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "discrete",
+      "unit": "%",
+      "options": [
+        "CHORUS",
+        "VIBRATO"
+      ],
+      "discrete_steps": 0
+    },
+    {
+      "name": "Tone",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Mix",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 4,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "07_FX2": [
+    {
+      "name": "TIME",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "FDBACK",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "BASS",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TREBLE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "58_REV": [
+    {
+      "name": "DECAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "PRE-DELAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy5",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
     }
   ]
 }

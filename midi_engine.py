@@ -157,9 +157,13 @@ class MidiEngineMixin:
         # --- CHECK FOR MODEL CHANGE OR SPECIAL STATES (Pre/Post, On/Off) ---
         if (0x10 <= slot_raw <= 0x13 and param == 0x00) or \
            (slot_raw == 0x00 and param == 0x0A) or \
-           (slot_raw == 0x02 and param == 0x13):
+           (slot_raw == 0x02 and param == 0x13): # 02 13 - это смена кабинета!
+            # Если мы сами сейчас делаем сдвиг/свап, игнорируем эхо смены модели, 
+            # чтобы не запустить опрос параметров раньше времени.
+            if getattr(self, "is_shifting", False):
+                return
+
             self._log(f"[LIVE] Important State/Model Changed (Slot {slot_raw:02X}, Param {param:02X}). Syncing...")
-            # Модель сменилась - это точно изменение, но лучше довериться дампу
             self._trigger_live_sync()
             return
         
@@ -225,7 +229,10 @@ class MidiEngineMixin:
                     return
                 return
             
-            # Для VOL (Pre/Post) на слоте 02
+            # Для VOL (Pre/Post) на слоте 02 и ER на слоте 00
+            if slot_raw == 0x00 and param == 0x13:
+                target_bid = "CAB"
+            
             if slot_raw == 0x02 and param == 0x07:
                 new_pp = 1 if val > 0 else 0
                 if self.blocks["VOL"].pre_post != new_pp:
@@ -330,23 +337,35 @@ class MidiEngineMixin:
         slot = b.slot_id
         param = 0x00
         val = b.model_id
+        # Специальные адреса для системных блоков
         if bid == "AMP":
-            slot = 0x00
-            param = 0x0A 
-            val = b.model_id 
+            slot = 0x02
+            param = 0x00
         elif bid == "CAB":
             slot = 0x02
-            param = 0x13 
-            val = b.model_id 
+            param = 0x0F
         elif bid == "WAH":
             slot = 0x02
             param = 0x12
-            val = b.model_id
             
+        # 1. Dirty bit для FX
+        if bid in ["FX1", "FX2", "FX3", "REV"]:
+            mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
+            self._send_raw(mask_data)
+            
+        # 1. Live Type
         data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         self._send_raw(data)
+        
+        # 2. Commit Type (MANDATORY for saving)
+        # Для FX коммит идет в Edit Buffer (+0x20)
+        commit_slots = [slot + 0x20] if bid in ["FX1", "FX2", "FX3", "REV"] else [slot]
+        for s in commit_slots:
+            data_62 = self._make_sysex(s, param, val, hi_res=False, cmd=0x62)
+            self._send_raw(data_62)
+
         self._set_preset_modified(True)
-        self._log(f"→ {bid} TYPE: 0x{val:02X} (Slot {slot:02X}, P{param:02X})")
+        self._log(f"→ {bid} TYPE: 0x{val:02X} (Slot {slot:02X}, P{param:02X}) + Committed")
 
     def _send_on_off(self, bid):
         """Wrapper for calling the correct block on/off method."""
@@ -372,18 +391,13 @@ class MidiEngineMixin:
         send_slot = cfg.get("slot_id", b.slot_id)
         
         # Список слотов, куда слать команду (для FX блоков нужно слать в два диапазона для апдейта edit buffer)
-        target_slots = []
-        
-        if bid in ["FX1", "FX2", "FX3", "REV"] and not cfg.get("no_offset"):
-            # FX крутилки: base+0x10 (0x20-0x23 edit buffer) + base+0x20 (0x30-0x33 live)
-            base = b.slot_id
-            target_slots = [base + 0x10, base + 0x20]
-        elif send_slot == 0x00 and not cfg.get("no_offset"):
-            # Слот 0x00 (базовые AMP-шные крутилки Drive/Bass/Mid/Treble/ChVol) → офсет +0x20
-            target_slots = [0x20]
+        # ОПРЕДЕЛЯЕМ ЦЕЛЕВОЙ СЛОТ (для HD300 всё проще: один блок - один слот)
+        if bid in ["FX1", "FX2", "FX3", "REV"]:
+            # FX крутилки: шлём в 0x2x (Live) и 0x3x (Edit Buffer)
+            target_slots = [b.slot_id + 0x10, b.slot_id + 0x20]
         else:
-            # Для всех остальных (GATE, VOL, WAH или если no_offset) шлём как есть
-            target_slots = [send_slot]
+            # Для всех остальных (AMP, CAB, GATE, VOL, WAH) это всегда слот 0x02
+            target_slots = [0x02]
             
         hw_idx = cfg.get("hw_idx", 0)
         hi_res = cfg.get("hi_res", True)
@@ -415,18 +429,50 @@ class MidiEngineMixin:
             else:
                 val = int(round((pct / 100.0) * 127))
 
+        if bid in ["FX1", "FX2", "FX3", "REV"]:
+            # 1. Context Kick (P06) - сообщаем процу, какую модель мы крутим
+            # Это критично для того, чтобы проц "проснулся" и начал принимать параметры
+            context_data = self._make_sysex(b.slot_id, 0x06, b.model_id, hi_res=True, cmd=0x63)
+            self._send_raw(context_data)
+            
+            # 2. Обязательная маска (Dirty Bit)
+            mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
+            self._send_raw(mask_data)
+            import time
+            time.sleep(0.01) # Даем процу осознать контекст и маску
+
+        # 1. Рассчитываем целевые слоты по логике a3d12f8
+        p_slot = cfg.get("slot_id", b.slot_id)
+        target_slots = []
+        
+        if bid in ["FX1", "FX2", "FX3", "REV"] and not cfg.get("no_offset"):
+            # FX: base+0x10 (edit buffer) + base+0x20 (live)
+            target_slots = [p_slot + 0x10, p_slot + 0x20]
+        elif p_slot == 0x00 and not cfg.get("no_offset"):
+            # AMP Main (0x00) -> Live Sound Offset +0x20
+            target_slots = [0x20]
+        else:
+            # CAB (0x02), GATE, VOL, WAH - шлем напрямую в p_slot
+            target_slots = [p_slot]
+
+        # 2. Живое обновление (0x63) во все целевые слоты
         for s in target_slots:
-            # Только 0x63 (живой звук) — коммит пойдёт отложенно через _commit_param
             data_63 = self._make_sysex(s, hw_idx, val, hi_res=hi_res, cmd=0x63)
             self._send_raw(data_63)
 
         self._set_preset_modified(True)
         self._log(f"→ PARAM {bid} P{hw_idx:02X} = {val} ({'HI' if hi_res else 'LO'}) [63 live]")
         
-        # Запоминаем для отложенного коммита
-        self._last_commit_info = {
-            "slots": target_slots, "hw_idx": hw_idx, "val": val,
-            "hi_res": hi_res, "bid": bid,
+        # 3. Подготовка к отложенному коммиту (0x62)
+        # Для FX коммитим в Edit Buffer (+0x10), для остальных - в целевые слоты
+        commit_slots = [p_slot + 0x10] if bid in ["FX1", "FX2", "FX3", "REV"] else target_slots
+        
+        if not hasattr(self, '_pending_commits'):
+            self._pending_commits = {}
+        commit_key = f"{bid}_{hw_idx}"
+        self._pending_commits[commit_key] = {
+            "slots": commit_slots, "hw_idx": hw_idx, "val": val,
+            "hi_res": hi_res, "bid": bid, "p_slot": p_slot
         }
 
     def set_block_on(self, bid, is_on):
@@ -447,8 +493,9 @@ class MidiEngineMixin:
             data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         else:
             # Стандартный On/Off для FX блоков (FX1-FX3, REV)
-            # CMD 0x63, Param 0x03
             slot = b.slot_id
+            mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
+            self._send_raw(mask_data)
             data = self._make_sysex(slot, 0x03, val, hi_res=False, cmd=0x63)
         
         self._send_raw(data)
@@ -484,6 +531,9 @@ class MidiEngineMixin:
 
     def _query_block_params(self, bid):
         """Запрашивает текущие значения ручек для указанного блока (в фоновом потоке)."""
+        if getattr(self, "is_shifting", False):
+            return
+
         if getattr(self, "_midi_survey_lock", None) is None:
             self._midi_survey_lock = threading.Lock()
             
@@ -494,9 +544,12 @@ class MidiEngineMixin:
         threading.Thread(target=_worker, daemon=True).start()
 
     def _do_query_block_sync(self, bid):
-        """Внутренний синхронный метод опроса одного блока. Должен вызываться из потока."""
+        """Синхронный опрос всех параметров блока."""
+        if getattr(self, "is_shifting", False):
+            return
+            
+        b = self.blocks.get(bid)
         mapping = self._get_mapping(bid)
-        b = self.blocks[bid]
         
         self._log(f"→ Polling {bid} ({b.name})...")
 
@@ -546,7 +599,11 @@ class MidiEngineMixin:
             self._request_preset_dump(target)
 
     def _trigger_live_sync(self):
-        """Запускает фоновый запрос дампа с задержкой, чтобы не спамить (debounce)"""
+        """Инициирует полную синхронизацию (или фоновый опрос) после изменений."""
+        if getattr(self, "is_shifting", False):
+            return
+            
+        if self._is_surveying: return
         if not hasattr(self, '_live_dump_debounce'):
             self._live_dump_debounce = QTimer(self)
             self._live_dump_debounce.setSingleShot(True)

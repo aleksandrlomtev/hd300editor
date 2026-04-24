@@ -135,6 +135,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         # Блокировка для MIDI-обстрела (чтобы запросы не накладывались)
         self._midi_survey_lock = __import__('threading').Lock()
         self._is_surveying = False
+        self.is_shifting = False
 
         self.cats_data["Amp"] = list(AMP_NAMES.values())
         self.cats_data["Cabinet"] = list(CAB_NAMES.values())
@@ -592,8 +593,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         
         if throttle_key in self._param_throttle:
             # Перевзводим таймер коммита (ползунок ещё крутится)
-            if hasattr(self, '_commit_timer') and self._commit_timer.isActive():
+            if hasattr(self, '_commit_timer'):
                 self._commit_timer.start(300)
+            if hasattr(self, '_commit_kick_timer'):
+                self._commit_kick_timer.stop()
             return
         
         # Первый вызов — шлём сразу и запускаем таймер блокировки
@@ -620,38 +623,77 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._commit_timer = QTimer(self)
             self._commit_timer.setSingleShot(True)
             self._commit_timer.timeout.connect(self._do_deferred_commit)
+        
+        if not hasattr(self, '_commit_kick_timer'):
+            self._commit_kick_timer = QTimer(self)
+            self._commit_kick_timer.setSingleShot(True)
+            self._commit_kick_timer.timeout.connect(self._do_deferred_kick)
+
         self._commit_timer.start(300)
+        self._commit_kick_timer.stop() # Новое движение — отменяем старый пинок
 
     def _do_deferred_commit(self):
-        """Отложенный коммит: 62→250ms→63 на все слоты последнего параметра."""
-        info = getattr(self, '_last_commit_info', None)
-        if not info or not self.midi_out:
+        """Отложенный коммит: 62→250ms→63 на все ожидающие параметры."""
+        pending = getattr(self, '_pending_commits', {})
+        if not pending or not self.midi_out:
             return
         
-        def _commit_thread():
-            import time
-            slots = info["slots"]
-            hw_idx = info["hw_idx"]
-            val = info["val"]
-            hi_res = info["hi_res"]
+        # 1. Шаг 1: 0x62 (COMMIT) на все слоты всех измененных параметров
+        for key, info in pending.items():
             bid = info["bid"]
-            
-            # Шаг 1: 0x62 на все слоты
-            for s in slots:
-                data_62 = self._make_sysex(s, hw_idx, val, hi_res=hi_res, cmd=0x62)
+            if bid in ["FX1", "FX2", "FX3", "REV"]:
+                # Повторяем маску перед коммитом для надежности
+                b = self.blocks[bid]
+                mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
+                self._send_raw(mask_data)
+
+            for s in info["slots"]:
+                data_62 = self._make_sysex(s, info["hw_idx"], info["val"], hi_res=info["hi_res"], cmd=0x62)
                 self._send_raw(data_62)
+        
+        # 2. Копируем в очередь для пинка и очищаем текущую
+        self._kick_queue = dict(pending)
+        self._pending_commits.clear()
+        
+        # 3. Через 250мс "догоняем" CMD 0x63, чтобы проц обновил живой звук
+        self._commit_kick_timer.start(250)
+
+    def _do_deferred_kick(self):
+        """Финальный пинок CMD 0x63 после коммита."""
+        kicks = getattr(self, '_kick_queue', {})
+        if not kicks or not self.midi_out:
+            return
             
-            # Пауза 250мс
-            time.sleep(0.250)
+        for key, info in kicks.items():
+            bid = info["bid"]
+            b = self.blocks.get(bid)
+            if not b: continue
             
-            # Шаг 2: 0x63 на все слоты
-            for s in slots:
-                data_63 = self._make_sysex(s, hw_idx, val, hi_res=hi_res, cmd=0x63)
+            # 1. Пинки (Kick/Mask) - ТОЛЬКО для FX блоков
+            if bid in ["FX1", "FX2", "FX3", "REV"]:
+                context_data = self._make_sysex(b.slot_id, 0x06, b.model_id, hi_res=True, cmd=0x63)
+                self._send_raw(context_data)
+                if bid != "FX3": # Для FX3 маска иногда мешает коммиту
+                    mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
+                    self._send_raw(mask_data)
+            
+            # 2. Рассчитываем целевые слоты по логике a3d12f8 (Live Sound)
+            p_slot = info.get("p_slot", b.slot_id)
+            target_slots = []
+            if bid in ["FX1", "FX2", "FX3", "REV"]:
+                target_slots = [p_slot + 0x20] # Для пинка шлем только в LIVE звук (+0x20)
+            elif p_slot == 0x00:
+                target_slots = [0x20] # AMP Live звук
+            else:
+                target_slots = [p_slot] # CAB, GATE, VOL, WAH
+
+            for s in target_slots:
+                data_63 = self._make_sysex(s, info["hw_idx"], info["val"], hi_res=info["hi_res"], cmd=0x63)
                 self._send_raw(data_63)
             
-            self._log(f"✓ COMMIT {bid} P{hw_idx:02X} = {val} [62→250ms→63]")
-        
-        __import__('threading').Thread(target=_commit_thread, daemon=True).start()
+            self._log(f"✓ COMMIT {bid} P{info['hw_idx']:02X} = {info['val']} [62→250ms→63]")
+            
+        self._kick_queue.clear()
 
     def _on_add_param(self):
         self._log("Добавлен новый параметр (не сохранён)")
@@ -1111,6 +1153,9 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         """Запрашивает значения ручек для конкретного блока. 
         Запускается в отдельном потоке с блокировкой.
         """
+        if getattr(self, "is_shifting", False):
+            return
+            
         if not self.midi_out: return
         
         def _target():
@@ -1943,6 +1988,8 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         Порядок: OFF всем → pre/post → fx_type → пауза → параметры → ON всем → re-poll.
         """
         if not bids: return
+        
+        self.is_shifting = True
 
         # Сохраняем финальный is_on и слепок параметров
         final_on = {}
@@ -1966,34 +2013,65 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 b = self.blocks[bid]
                 mapping = self._get_mapping(bid)
                 
-                # Восстанавливаем параметры из слепка, так как они могли 
-                # быть затерты дефолтными значениями из-за race condition 
-                # при раннем опросе во время смены модели
+                # 1. Context Kick (P06)
+                context_data = self._make_sysex(b.slot_id, 0x06, b.model_id, hi_res=True, cmd=0x63)
+                self._send_raw(context_data)
+
+                # 2. Шлём "Dirty Bit" (0A 7F) в основной слот блока
+                mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
+                self._send_raw(mask_data)
+                
+                # 2. Восстанавливаем параметры из слепка
                 b.params = list(snapshots[bid])
                 self._pad_params(b, len(mapping))
                 
                 for cfg, pct in zip(mapping, b.params):
                     if cfg.get("enabled", True):
-                        self._send_param(bid, cfg, pct)
+                        hw_idx = cfg.get("hw_idx", 0)
+                        hi_res = cfg.get("hi_res", True)
+                        hw_max = cfg.get("hw_max", 2097151)
+                        
+                        if cfg.get("scaling") == "gate_thresh":
+                            db_val = (pct / 100.0) * 96.0 - 96.0
+                            val = 0 if db_val >= 0 else int(1048576 + (-db_val) * 1000)
+                        elif hi_res:
+                            val = int((pct / 100.0) * hw_max)
+                        else:
+                            vals = cfg.get("options") or cfg.get("values")
+                            val = int(round((pct / 100.0) * (len(vals)-1))) if vals else int(round((pct / 100.0) * 127))
+                            
+                        # 1. Live update (0x63) -> Live Slot (+0x10)
+                        p_slot = cfg.get("slot_id", b.slot_id)
+                        live_slot = b.slot_id + 0x10 if bid in ["FX1", "FX2", "FX3", "REV"] else p_slot
+                        data_63 = self._make_sysex(live_slot, hw_idx, val, hi_res=hi_res, cmd=0x63)
+                        self._send_raw(data_63)
+                        
+                        # 2. Immediate Commit (0x62) -> Edit Buffer (+0x20)
+                        commit_slot = b.slot_id + 0x20 if bid in ["FX1", "FX2", "FX3", "REV"] else p_slot
+                        data_62 = self._make_sysex(commit_slot, hw_idx, val, hi_res=hi_res, cmd=0x62)
+                        self._send_raw(data_62)
+                        
+                        self._log(f"→ RESTORE {bid} P{hw_idx:02X} = {val} (Live+Buffer)")
+                        import time
+                        # Для FX3 даем больше времени на запись
+                        time.sleep(0.015 if bid == "FX3" else 0.005)
 
-            # Восстанавливаем is_on
             for bid in bids:
                 self.blocks[bid].is_on = final_on[bid]
                 self._send_on_off(bid)
-
-            # Re-poll с задержкой (дать процессору время прожевать)
-            delay = 200 + (len(bids) - 2) * 50
-            def repoll_all():
+            
+            # Final cleanup and re-poll
+            delay = 400 + (len(bids) * 50)
+            def final_cleanup():
+                self.is_shifting = False
                 for bid in bids:
                     self._query_block_params(bid)
-            QTimer.singleShot(delay, repoll_all)
-            
-            # Также обновляем UI выбранного блока, чтобы ползунки не застряли на дефолте
-            if self.selected_id in bids:
-                self._render_params()
+                if self.selected_id in bids:
+                    self._render_params()
+                    
+            QTimer.singleShot(delay, final_cleanup)
 
-        # Ждем 250мс пока процессор загрузит новые модели
-        QTimer.singleShot(250, _send_params_delayed)
+        QTimer.singleShot(300, _send_params_delayed)
 
     @staticmethod
     def _pad_params(block, target_len: int):
@@ -2160,6 +2238,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 break
 
         self._update_preset_ui(pc, name=new_name)
+        self._set_preset_modified(False)
 
     def _on_preset_right_click(self, pos):
         """RMB on preset: inline rename ONLY for active."""
