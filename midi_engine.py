@@ -339,11 +339,11 @@ class MidiEngineMixin:
         val = b.model_id
         # Специальные адреса для системных блоков
         if bid == "AMP":
-            slot = 0x02
-            param = 0x00
+            slot = 0x00
+            param = 0x0A
         elif bid == "CAB":
             slot = 0x02
-            param = 0x0F
+            param = 0x13
         elif bid == "WAH":
             slot = 0x02
             param = 0x12

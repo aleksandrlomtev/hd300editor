@@ -590,16 +590,18 @@
   ],
   "0A_REV": [
     {
-      "name": "DECAY",
-      "hw_idx": 1,
+      "name": "PRE DELAY",
+      "hw_idx": 2,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
-      "unit": "%"
+      "unit": "%",
+      "max_disp": 200.0,
+      "suffix": "ms"
     },
     {
-      "name": "PRE DELAY",
-      "hw_idx": 2,
+      "name": "DECAY",
+      "hw_idx": 1,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -614,25 +616,25 @@
       "unit": "%"
     },
     {
-      "name": "Dummyy4",
-      "hw_idx": 4,
-      "enabled": false,
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
       "step": 1.0,
       "type": "continuous",
       "unit": "%"
     },
     {
       "name": "Dummy 5",
-      "hw_idx": 4,
+      "hw_idx": 0,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
       "unit": "%"
     },
     {
-      "name": "MIX",
-      "hw_idx": 5,
-      "enabled": true,
+      "name": "dummy6",
+      "hw_idx": 0,
+      "enabled": false,
       "step": 1.0,
       "type": "continuous",
       "unit": "%"
@@ -640,17 +642,19 @@
   ],
   "5A_REV": [
     {
-      "name": "DECAY",
-      "hw_idx": 1,
+      "name": "PRE-DELAY",
+      "hw_idx": 2,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
       "unit": "%",
-      "hw_max": 2097151
+      "hw_max": 2097151,
+      "max_disp": 200.0,
+      "suffix": "ms"
     },
     {
-      "name": "PRE-DELAY",
-      "hw_idx": 2,
+      "name": "DECAY",
+      "hw_idx": 1,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -667,15 +671,6 @@
       "hw_max": 2097151
     },
     {
-      "name": "HIGH CUT",
-      "hw_idx": 4,
-      "enabled": false,
-      "step": 1.0,
-      "type": "continuous",
-      "unit": "%",
-      "hw_max": 2097151
-    },
-    {
       "name": "MIX",
       "hw_idx": 5,
       "enabled": true,
@@ -685,8 +680,17 @@
       "hw_max": 2097151
     },
     {
-      "name": "LEVEL",
-      "hw_idx": 6,
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
@@ -1027,7 +1031,7 @@
   "0A_FX1": [
     {
       "name": "DECAY",
-      "hw_idx": 1,
+      "hw_idx": 2,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1036,7 +1040,7 @@
     },
     {
       "name": "PRE DELAY",
-      "hw_idx": 2,
+      "hw_idx": 1,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1054,7 +1058,7 @@
     },
     {
       "name": "MIX",
-      "hw_idx": 4,
+      "hw_idx": 5,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -1063,7 +1067,7 @@
     },
     {
       "name": "Dummy 5",
-      "hw_idx": 5,
+      "hw_idx": 0,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
@@ -2052,7 +2056,11 @@
       "step": 1.0,
       "type": "continuous",
       "unit": "%",
-      "hw_max": 2097151
+      "hw_max": 2097151,
+      "min_disp": 0.0,
+      "max_disp": 200.0,
+      "suffix": "ms",
+      "display_step": 0.0
     },
     {
       "name": "TONE",
@@ -2089,6 +2097,1053 @@
       "type": "continuous",
       "unit": "%",
       "hw_max": 2097151
+    }
+  ],
+  "0A_FX2": [
+    {
+      "name": "DECAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "PRE DELAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 5",
+      "hw_idx": 4,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "0A_FX3": [
+    {
+      "name": "DECAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "PRE DELAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 5",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "5E_REV": [
+    {
+      "name": "PHASE",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "GAIN",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "OUTPUT",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "HPF",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 1,
+      "max_disp": 500,
+      "decimals": 0
+    },
+    {
+      "name": "LPF",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 5000,
+      "max_disp": 20000,
+      "decimals": 0
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "5E_FX2": [
+    {
+      "name": "PHASE",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "GAIN",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "OUTPUT",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "HPF",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 1,
+      "max_disp": 500,
+      "decimals": 0
+    },
+    {
+      "name": "LPF",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "Hz",
+      "hw_max": 2097151,
+      "min_disp": 5000,
+      "max_disp": 20000,
+      "decimals": 0
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "52_FX1": [
+    {
+      "name": "TIME",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "FDBACK",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "SWPSPD",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "52_FX3": [
+    {
+      "name": "TIME",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "FDBACK",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "SWPSPD",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "43_FX2": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "STEP 1",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 2",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 3",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 4",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "43_FX3": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "STEP 1",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 2",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 3",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 4",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "43_REV": [
+    {
+      "name": "SPEED",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "STEP 1",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 2",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 3",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "STEP 4",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "discrete_steps": 18
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "24_FX2": [
+    {
+      "name": "LO FREQ",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "suffix": "dB",
+      "max_disp": 12.0,
+      "min_disp": -12.0
+    },
+    {
+      "name": "LO MID",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "HI MID",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "HIGH",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "Shift",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "56_REV": [
+    {
+      "name": "PRE-DELAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 200.0,
+      "suffix": "ms"
+    },
+    {
+      "name": "DECAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "LEVEL",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    }
+  ],
+  "57_REV": [
+    {
+      "name": "PRE-DELAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 200.0,
+      "suffix": "ms"
+    },
+    {
+      "name": "DECAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    }
+  ],
+  "55_REV": [
+    {
+      "name": "PRE-DELAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 200.0,
+      "suffix": "ms"
+    },
+    {
+      "name": "DECAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    }
+  ],
+  "02_REV": [
+    {
+      "name": "DECAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 100.0,
+      "suffix": "%"
+    },
+    {
+      "name": "PRE DELAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "suffix": "ms",
+      "max_disp": 200.0
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 5",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "5B_REV": [
+    {
+      "name": "PRE-DELAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 200.0,
+      "suffix": "ms"
+    },
+    {
+      "name": "DECAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    }
+  ],
+  "5C_REV": [
+    {
+      "name": "PRE-DELAY",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 200.0,
+      "suffix": "ms"
+    },
+    {
+      "name": "DECAY",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TONE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "dummy",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    }
+  ],
+  "46_REV": [
+    {
+      "name": "TIME",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 2000.0,
+      "suffix": "ms",
+      "min_disp": 20.0
+    },
+    {
+      "name": "FDBACK",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "BASS",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "TREBLE",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "09_REV": [
+    {
+      "name": "TIME",
+      "hw_idx": 0,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "max_disp": 2000.0,
+      "suffix": "ms"
+    },
+    {
+      "name": "FEEDBACK",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "DEPTH",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "SWELL",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "MIX",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
     }
   ]
 }
