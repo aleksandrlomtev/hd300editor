@@ -2,18 +2,18 @@ import time
 
 def warmup_4band_eq(app, bid):
     """
-    ♿ КРЕСЛО ХОККИНГА (Спец-хак для 4-Band Shift EQ в REV слоте).
-    Инициализирует регистры процессора SET-командами, чтобы он проснулся.
+    ♿ HAWKING'S WHEELCHAIR (Special hack for 4-Band Shift EQ in REV slot).
+    Initializes CPU registers with SET commands to wake it up.
     """
     if bid != "REV":
         return
 
-    app._log("♿ Принудительный прогрев 4-Band EQ (FX4)...")
+    app._log("♿ Forced warm-up for 4-Band EQ (FX4)...")
     app._is_warming_up = True
     
-    # СЛОТ 0x23 - управление параметрами REV
-    # Выставляем все 5 ручек в 50% (центр/0дб)
-    # И обязательно шлем парами 0x63 (Live) и 0x62 (Commit), прямо как при кручении ползунков
+    # SLOT 0x23 - REV parameter control
+    # Set all 5 knobs to 50% (center/0dB)
+    # And must send in pairs 0x63 (Live) and 0x62 (Commit), just like when turning sliders
     warmup_val = [0x3F, 0x7F, 0x7F]
     
     try:
@@ -23,9 +23,9 @@ def warmup_4band_eq(app, bid):
             
             app._send_raw(cmd_63)
             app._send_raw(cmd_62)
-            time.sleep(0.04) # небольшая задержка между параметрами
+            time.sleep(0.04) # small delay between parameters
         
-        time.sleep(0.3) # Даем процу переварить эти 10 сообщений
+        time.sleep(0.3) # Give the CPU time to digest these 10 messages
     finally:
         app._is_warming_up = False
-        app._log("♿ Посадка завершена.")
+        app._log("♿ Landing completed.")

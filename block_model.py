@@ -25,7 +25,7 @@ class BlockState:
         self.is_on     = True
         self.pre_post  = 0       # 0=PRE, 1=POST
         self.params    = []      # list of float (%)
-        self.extra     = {}      # доп поля (amp_id, cab_id, etc)
+        self.extra     = {}      # additional fields (amp_id, cab_id, etc)
         self.update_name()
 
     def update_name(self):

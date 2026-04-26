@@ -1,15 +1,15 @@
 """
-Константы, словари и маппинги для POD HD300 Unchained Editor.
-Все имена эффектов, усилителей, кабинетов, цвета категорий, иконки.
+Constants, dictionaries, and mappings for POD HD300 Unchained Editor.
+All effect names, amps, cabs, category colors, icons.
 """
 
 import os
 
-# Базовая директория ресурсов (сейчас в самой папке refactor/)
+# Base resource directory (currently within refactor/ folder)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ─────────────────────────────────────────────
-#  СЛОВАРИ ID → ИМЯ
+#  ID → NAME DICTIONARIES
 # ─────────────────────────────────────────────
 
 FX_NAMES = {
@@ -81,7 +81,7 @@ WAH_NAMES = {
 }
 
 # ─────────────────────────────────────────────
-#  ВИЗУАЛ: ЦВЕТА, ИКОНКИ, МАППИНГИ
+#  VISUALS: COLORS, ICONS, MAPPINGS
 # ─────────────────────────────────────────────
 
 CATEGORY_COLOR = {
@@ -125,7 +125,7 @@ CATEGORY_ICON = {
     "Gate": "⊘", "Vol": "⊣", "Wah": "🦶", "None": "◼",
 }
 
-# Маппинг имён эффектов/усилителей/кабинетов на файлы иконок в img_converted/
+# Mapping of effect/amp/cab names to icon files in img_converted/
 FX_IMG_MAP = {
     # FX
     "Screamer": "Screamer.png", "Spring": "Spring.png", "Smart Harmony": "SmartHarmony.png",

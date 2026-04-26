@@ -231,18 +231,18 @@ class ParamRow(QWidget):
         min_d = self.cfg.get("min_disp", 0.0)
         max_d = self.cfg.get("max_disp", 100.0)
         
-        # Основная формула масштабирования
+        # Main scaling formula
         disp = min_d + (pct / 100.0) * (max_d - min_d)
         
-        # Псевдодискретность (округление только для текста)
+        # Pseudo-discreteness (rounding for text only)
         d_step = self.cfg.get("display_step")
         if d_step is not None and d_step > 0:
             disp = round(disp / d_step) * d_step
             
-        # Форматирование суффикса и пробелов
+        # Formatting suffix and spaces
         suffix = self.cfg.get("suffix", unit)
         spacer = ""
-        if suffix and suffix[0].isalnum(): # Если суффикс начинается с буквы/цифры (ms, Hz, dB)
+        if suffix and suffix[0].isalnum(): # If suffix starts with a letter/digit (ms, Hz, dB)
             spacer = " "
             
         self.val_lbl.setText(f"{disp:.{decimals}f}{spacer}{suffix}")
@@ -273,19 +273,19 @@ class ParamRow(QWidget):
         try:
             final_val = type_conv(val) if type_conv else val
             self.cfg[key] = final_val
-            # Сразу обновляем текст лейбла для предпросмотра
+            # Immediately update label text for preview
             self._update_text(self._target_pct)
         except: pass
     def _on_mode_changed(self, idx):
         val = self.mode_combo.currentData()
         self.cfg["discrete_steps"] = val
-        # Если мы в режиме маппинга, то слайдер не обязательно перерисовывать сразу, 
-        # но для наглядности можно было бы. Однако маппинг мод обычно статический.
-        # Но если мы хотим чтобы слайдер СРАЗУ стал дискретным:
+        # If in mapping mode, the slider doesn't necessarily need to be redrawn immediately, 
+        # but it could be done for visual clarity. However, mapping mode is usually static.
+        # But if we want the slider to become discrete IMMEDIATELY:
         if self.slider:
             if val > 1:
                 self.slider.setRange(0, val - 1)
-                # Сохраняем текущий pct
+                # Saving current pct
                 pct = self._target_pct
                 self.slider.blockSignals(True)
                 self.slider.setValue(int(round((pct / 100.0) * (val - 1))))

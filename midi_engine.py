@@ -21,7 +21,7 @@ from sysex_parser import parse_full_dump, unpack_sysex
 class MidiEngineMixin:
     """Mixin class mixed into MainWindow. All MIDI I/O."""
 
-    # ══ Подключение ══════════════════════════════
+    # ══ Connection ══════════════════════════════
 
     def _auto_connect(self):
         if not MIDO_OK:
@@ -88,7 +88,7 @@ class MidiEngineMixin:
                 self._update_slider(0x08, pct)
             self._log(f"[LIVE] WAH Pos (via CC#4) = {pct:.1f}%")
 
-    # ══ Приём SysEx ══════════════════════════════
+    # ══ Receiving SysEx ══════════════════════════════
 
     def _on_sysex(self, raw):
         if getattr(self, "_is_warming_up", False):
@@ -106,7 +106,7 @@ class MidiEngineMixin:
             # Process On/Off or Pre/Post state (CMD 5D/5E)
             self._parse_state(raw)
         elif cmd == 0x62:
-            # Ответ с номером текущего пресета ТОЛЬКО если sub-type 04:07
+            # Response with current preset number ONLY if sub-type is 04:07
             if len(raw) >= 13 and raw[8] == 0x04 and raw[9] == 0x07:
                 preset_no = raw[12]
                 self._sig_got_preset_no.emit(preset_no)
@@ -115,7 +115,7 @@ class MidiEngineMixin:
         elif cmd == 0x63:
             self._parse_live(raw)
 
-    # ══ Парсинг состояний ════════════════════════
+    # ══ State Parsing ════════════════════════
 
     def _parse_state(self, raw):
         """Parse bypass or routing messages (CMD 0x5C/5D/5E).
@@ -147,7 +147,7 @@ class MidiEngineMixin:
         slot_raw = raw[8]
         param = raw[9]
         v1, v2, v3 = raw[10], raw[11], raw[12] if len(raw) > 12 else (raw[10], raw[11], 0)
-        # 21-битное значение
+        # 21-bit value
         val = (v1 << 14) | (v2 << 7) | v3
 
         # 2. NORMALIZATION AND BLOCK IDENTIFICATION
@@ -157,9 +157,9 @@ class MidiEngineMixin:
         # --- CHECK FOR MODEL CHANGE OR SPECIAL STATES (Pre/Post, On/Off) ---
         if (0x10 <= slot_raw <= 0x13 and param == 0x00) or \
            (slot_raw == 0x00 and param == 0x0A) or \
-           (slot_raw == 0x02 and param == 0x13): # 02 13 - это смена кабинета!
-            # Если мы сами сейчас делаем сдвиг/свап, игнорируем эхо смены модели, 
-            # чтобы не запустить опрос параметров раньше времени.
+           (slot_raw == 0x02 and param == 0x13): # 02 13 is cabinet change!
+            # If we are performing a shift/swap, ignore model change echo, 
+            # to avoid triggering parameter polling prematurely.
             if getattr(self, "is_shifting", False):
                 return
 
@@ -183,9 +183,9 @@ class MidiEngineMixin:
         
         if not target_bid: return
 
-        # 2. ПАРСИНГ ПАРАМЕТРОВ (CMD 0x63 / 0x62)
+        # 2. PARAMETER PARSING (CMD 0x63 / 0x62)
         if cmd in [0x62, 0x63]:
-            # Спец-обработка для головы (AMP) On/Off через параметр 14
+            # Special handling for AMP On/Off via parameter 14
             if target_bid == "AMP" and param == 0x14:
                 b = self.blocks.get("AMP")
                 if b:
@@ -203,7 +203,7 @@ class MidiEngineMixin:
             
             mapping = self._get_mapping(target_bid)
             
-            # РАЗДЕЛЕНИЕ ПО СЛОТАМ: 0x1x - СТЕЙТ (Routing/OnOff), 0x2x/0x3x - КРУТИЛКИ
+            # SLOT SEPARATION: 0x1x - STATE (Routing/OnOff), 0x2x/0x3x - KNOBS
             is_state_slot = (0x10 <= slot_raw <= 0x13)
             
             if is_state_slot:
@@ -229,7 +229,7 @@ class MidiEngineMixin:
                     return
                 return
             
-            # Для VOL (Pre/Post) на слоте 02 и ER на слоте 00
+            # For VOL (Pre/Post) on slot 02 and ER on slot 00
             if slot_raw == 0x00 and param == 0x13:
                 target_bid = "CAB"
             
@@ -244,7 +244,7 @@ class MidiEngineMixin:
                     self._sig_refresh_chain.emit()
                 return
             
-            # Поиск параметра в маппинге
+            # Searching for parameter in mapping
             p_cfg = None
             p_idx = -1
             search_param = param
@@ -254,7 +254,7 @@ class MidiEngineMixin:
                     p_idx = p_cfg.get("cache_idx", i)
                     break
             
-            # Режим сдвига для FX2/3/REV
+            # Shift mode for FX2/3/REV
             if p_idx == -1 and target_bid in ("FX2", "FX3", "REV"):
                 search_param = param + 1
                 for i, cfg in enumerate(mapping):
@@ -291,11 +291,11 @@ class MidiEngineMixin:
             pct = max(0.0, min(100.0, pct))
             if p_idx < len(b.params):
                 old_val = b.params[p_idx]
-                # Сравниваем с допуском 0.1%, чтобы не триггерить флаг на холостые запросы
+                # Compare with 0.1% tolerance to avoid triggering flags on idle requests
                 if abs(old_val - pct) > 0.1:
                     b.params[p_idx] = pct
                     
-                    # Если мы НЕ в режиме опроса (опрос Pitch Glide или выбор блока)
+                    # If we are NOT in polling mode (Pitch Glide polling or block selection)
                     if not getattr(self, "_is_surveying", False) and not getattr(self, "_ignore_live_modified", False):
                         self._sig_set_modified.emit(True)
                         
@@ -303,7 +303,7 @@ class MidiEngineMixin:
                         self._sig_update_slider.emit(param, pct)
                     self._log(f"[LIVE] {target_bid} ({b.name}) P{param:02X} = {pct:.1f}%")
 
-    # ══ Построение и отправка SysEx ══════════════
+    # ══ Building and Sending SysEx ══════════════
 
     def _make_sysex(self, slot_id, param_idx, val_int, hi_res=True, cmd=0x63):
         header = [0x00, 0x01, 0x0C, 0x14, 0x00, cmd, 0x00, slot_id, param_idx]
@@ -337,7 +337,7 @@ class MidiEngineMixin:
         slot = b.slot_id
         param = 0x00
         val = b.model_id
-        # Специальные адреса для системных блоков
+        # Special addresses for system blocks
         if bid == "AMP":
             slot = 0x00
             param = 0x0A
@@ -348,7 +348,7 @@ class MidiEngineMixin:
             slot = 0x02
             param = 0x12
             
-        # 1. Dirty bit для FX
+        # 1. Dirty bit for FX
         if bid in ["FX1", "FX2", "FX3", "REV"]:
             mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
             self._send_raw(mask_data)
@@ -358,7 +358,7 @@ class MidiEngineMixin:
         self._send_raw(data)
         
         # 2. Commit Type (MANDATORY for saving)
-        # Для FX коммит идет в Edit Buffer (+0x20)
+        # For FX, commit goes to Edit Buffer (+0x20)
         commit_slots = [slot + 0x20] if bid in ["FX1", "FX2", "FX3", "REV"] else [slot]
         for s in commit_slots:
             data_62 = self._make_sysex(s, param, val, hi_res=False, cmd=0x62)
@@ -376,7 +376,7 @@ class MidiEngineMixin:
     def _send_pre_post(self, bid):
         """Sends block PRE/POST position."""
         b = self.blocks[bid]
-        # Для VOL роутинг на Slot 02, Param 07. Для остальных - Param 01 на основном слоте.
+        # For VOL, routing on Slot 02, Param 07. For others - Param 01 on the main slot.
         slot = 0x02 if bid == "VOL" else b.slot_id
         param = 0x07 if bid == "VOL" else 0x01
         
@@ -386,17 +386,17 @@ class MidiEngineMixin:
         self._log(f"→ PRE/POST {bid}: {'POST' if b.pre_post else 'PRE'} (Slot {slot:02X}, P={param:02X})")
 
     def _send_param(self, bid, cfg, pct):
-        """Отправляет значение параметра в % (0-100)."""
+        """Sends parameter value in % (0-100)."""
         b    = self.blocks[bid]
         send_slot = cfg.get("slot_id", b.slot_id)
         
-        # Список слотов, куда слать команду (для FX блоков нужно слать в два диапазона для апдейта edit buffer)
-        # ОПРЕДЕЛЯЕМ ЦЕЛЕВОЙ СЛОТ (для HD300 всё проще: один блок - один слот)
+        # List of slots to send command (for FX blocks, need to send to two ranges for edit buffer update)
+        # DETERMINING TARGET SLOT (for HD300 it's simpler: one block - one slot)
         if bid in ["FX1", "FX2", "FX3", "REV"]:
-            # FX крутилки: шлём в 0x2x (Live) и 0x3x (Edit Buffer)
+            # FX knobs: sending to 0x2x (Live) and 0x3x (Edit Buffer)
             target_slots = [b.slot_id + 0x10, b.slot_id + 0x20]
         else:
-            # Для всех остальных (AMP, CAB, GATE, VOL, WAH) это всегда слот 0x02
+            # For everything else (AMP, CAB, GATE, VOL, WAH) it's always slot 0x02
             target_slots = [0x02]
             
         hw_idx = cfg.get("hw_idx", 0)
@@ -430,18 +430,18 @@ class MidiEngineMixin:
                 val = int(round((pct / 100.0) * 127))
 
         if bid in ["FX1", "FX2", "FX3", "REV"]:
-            # 1. Context Kick (P06) - сообщаем процу, какую модель мы крутим
-            # Это критично для того, чтобы проц "проснулся" и начал принимать параметры
+            # 1. Context Kick (P06) - notify CPU which model we are adjusting
+            # This is critical for the CPU to "wake up" and start accepting parameters
             context_data = self._make_sysex(b.slot_id, 0x06, b.model_id, hi_res=True, cmd=0x63)
             self._send_raw(context_data)
             
-            # 2. Обязательная маска (Dirty Bit)
+            # 2. Mandatory mask (Dirty Bit)
             mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
             self._send_raw(mask_data)
             import time
-            time.sleep(0.01) # Даем процу осознать контекст и маску
+            time.sleep(0.01) # Give the CPU time to realize the context and mask
 
-        # 1. Рассчитываем целевые слоты по логике a3d12f8
+        # 1. Calculate target slots according to a3d12f8 logic
         p_slot = cfg.get("slot_id", b.slot_id)
         target_slots = []
         
@@ -452,10 +452,10 @@ class MidiEngineMixin:
             # AMP Main (0x00) -> Live Sound Offset +0x20
             target_slots = [0x20]
         else:
-            # CAB (0x02), GATE, VOL, WAH - шлем напрямую в p_slot
+            # CAB (0x02), GATE, VOL, WAH - send directly to p_slot
             target_slots = [p_slot]
 
-        # 2. Живое обновление (0x63) во все целевые слоты
+        # 2. Live update (0x63) to all target slots
         for s in target_slots:
             data_63 = self._make_sysex(s, hw_idx, val, hi_res=hi_res, cmd=0x63)
             self._send_raw(data_63)
@@ -463,8 +463,8 @@ class MidiEngineMixin:
         self._set_preset_modified(True)
         self._log(f"→ PARAM {bid} P{hw_idx:02X} = {val} ({'HI' if hi_res else 'LO'}) [63 live]")
         
-        # 3. Подготовка к отложенному коммиту (0x62)
-        # Для FX коммитим в Edit Buffer (+0x10), для остальных - в целевые слоты
+        # 3. Prepare for deferred commit (0x62)
+        # For FX, commit to Edit Buffer (+0x10), for others - to target slots
         commit_slots = [p_slot + 0x10] if bid in ["FX1", "FX2", "FX3", "REV"] else target_slots
         
         if not hasattr(self, '_pending_commits'):
@@ -482,7 +482,7 @@ class MidiEngineMixin:
         
         val = 127 if is_on else 0
         
-        # Для головы (AMP) статус шлется как параметр в слоте 02
+        # For AMP, status is sent as a parameter in slot 02
         if bid == "AMP":
             slot = 0x02
             param = 0x14
@@ -492,7 +492,7 @@ class MidiEngineMixin:
             param = 0x09
             data = self._make_sysex(slot, param, val, hi_res=False, cmd=0x63)
         else:
-            # Стандартный On/Off для FX блоков (FX1-FX3, REV)
+            # Standard On/Off for FX blocks (FX1-FX3, REV)
             slot = b.slot_id
             mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
             self._send_raw(mask_data)
@@ -505,10 +505,10 @@ class MidiEngineMixin:
         self._refresh_chain()
         self._log(f"→ ON/OFF {bid}: {'ON' if is_on else 'OFF'}")
 
-    # ══ Запросы к процессору ══════════════════════
+    # ══ CPU Requests ══════════════════════
 
     def _request_preset_no(self):
-        """Шаг 1: запросить номер текущего пресета.
+        """Step 1: request current preset number.
         F0 00 01 0C 14 00 60 00 04 07 F7
         """
         data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, 0x04, 0x07]
@@ -516,7 +516,7 @@ class MidiEngineMixin:
         self._log("→ Requesting preset number...")
 
     def _request_preset_dump(self, preset_no):
-        """Шаг 2: запросить дамп конкретного пресета.
+        """Step 2: request specific preset dump.
         F0 00 01 0C 14 00 7C 00 b1 b2 b3 F7
         """
         b1 = (preset_no >> 14) & 0x7F
@@ -530,7 +530,7 @@ class MidiEngineMixin:
             self._log(f"→ Requesting dump for preset #{preset_no}...")
 
     def _query_block_params(self, bid):
-        """Запрашивает текущие значения ручек для указанного блока (в фоновом потоке)."""
+        """Requests current knob values for the specified block (in background thread)."""
         if getattr(self, "is_shifting", False):
             return
 
@@ -544,7 +544,7 @@ class MidiEngineMixin:
         threading.Thread(target=_worker, daemon=True).start()
 
     def _do_query_block_sync(self, bid):
-        """Синхронный опрос всех параметров блока."""
+        """Synchronous polling of all block parameters."""
         if getattr(self, "is_shifting", False):
             return
             
@@ -553,14 +553,14 @@ class MidiEngineMixin:
         
         self._log(f"→ Polling {bid} ({b.name})...")
 
-        # Расчитываем базовые ID для запросов
-        base_slot = b.slot_id # Для стейта (0x10-0x13)
-        # q_id для КРУТИЛОК (обычно base_slot + 0x20)
-        # ИСКЛЮЧАЕМ 0x02 (GATE/VOL/WAH), так как они опрашиваются по прямому адресу
+        # Calculate base IDs for requests
+        base_slot = b.slot_id # For state (0x10-0x13)
+        # q_id for KNOBS (usually base_slot + 0x20)
+        # EXCLUDING 0x02 (GATE/VOL/WAH) as they are polled by direct address
         q_id = base_slot + 0x20 if base_slot in [0x00, 0x10, 0x11, 0x12, 0x13] else base_slot
 
-        # 1. ЗАПРОС СОСТОЯНИЯ (On/Off и Pre/Post)
-        # Шлём в базовый слот (0x1x)
+        # 1. STATE REQUEST (On/Off and Pre/Post)
+        # Sending to base slot (0x1x)
         if base_slot in [0x10, 0x11, 0x12, 0x13]:
             for s_param in [0x01, 0x03]:
                 if not self.midi_out: return
@@ -568,21 +568,21 @@ class MidiEngineMixin:
                 self._send_raw(s_data)
                 time.sleep(0.008)
         elif bid == "WAH":
-            # Спец-запрос статуса WAH On/Off
+            # Special request for WAH On/Off status
             if not self.midi_out: return
             s_data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, 0x00, 0x09]
             self._send_raw(s_data)
             time.sleep(0.008)
 
-        # 2. ЗАПРОС КРУТИЛОК
-        # Шлём в q_id (обычно 0x3x)
+        # 2. KNOB REQUEST
+        # Sending to q_id (usually 0x3x)
         for cfg in mapping:
             if not self.midi_out: return
             p_idx = cfg.get("hw_idx")
             if p_idx is None:
                 continue
             
-            # ВАЖНО: Если у параметра задан свой slot_id, шлём туда! (например, WAH Pos -> 0x00)
+            # IMPORTANT: If a parameter has its own slot_id, send there! (e.g., WAH Pos -> 0x00)
             target_slot = cfg.get("slot_id", q_id)
             data = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, target_slot, p_idx]
             self._send_raw(data)
@@ -593,13 +593,13 @@ class MidiEngineMixin:
         self._request_preset_no()
 
     def _debounced_dump(self):
-        """Выполняется после дебаунс-таймера при быстром листании пресетов."""
+        """Executes after debounce timer during fast preset scrolling."""
         if hasattr(self, '_pending_preset'):
             target = 0x1FFFFF if getattr(self, "load_edit_buffer", True) else self._pending_preset
             self._request_preset_dump(target)
 
     def _trigger_live_sync(self):
-        """Инициирует полную синхронизацию (или фоновый опрос) после изменений."""
+        """Initiates full synchronization (or background polling) after changes."""
         if getattr(self, "is_shifting", False):
             return
             
@@ -613,29 +613,29 @@ class MidiEngineMixin:
     # ══ DI Mode ══════════════════════════════════
 
     def _toggle_di_mode(self):
-        """Переключает проц в DI режим (пресет DI + Mute USB + сохранение буфера)."""
+        """Switches CPU to DI mode (DI preset + Mute USB + buffer save)."""
         is_in_di = (self.current_preset_num == getattr(self, "di_preset", 124))
         
         if not is_in_di:
             self.saved_preset_for_di = self.current_preset_num
             self._log(f"[DI] Entering DI Mode. Requesting Edit Buffer for saving...")
             self._waiting_for_di_dump = True
-            # Запрашиваем дамп Edit Buffer
+            # Requesting Edit Buffer dump
             self._request_preset_dump(0x1FFFFF)
-            # Остальная логика (Mute/PC) сработает в _on_sysex при получении дампа
+            # Rest of logic (Mute/PC) will trigger in _on_sysex upon dump reception
         else:
             restore_to = self.saved_preset_for_di if self.saved_preset_for_di is not None else 0
             self._log(f"[DI] Exiting DI Mode. Returning to #{restore_to} and restoring buffer...")
             if self.midi_out:
-                # 1. Возвращаем пресет
+                # 1. Restore preset
                 self.midi_out.send(mido.Message('program_change', program=restore_to))
-                # 2. Если есть сохраненный дамп — кидаем его в проц
+                # 2. If there's a saved dump — send it to CPU
                 if self.saved_edit_buffer_for_di:
                     sysex_body = self.saved_edit_buffer_for_di[1:-1]
                     self.midi_out.send(mido.Message('sysex', data=sysex_body))
                     self._log("[DI] Saved Edit Buffer sent to processor.")
                 
-                # 3. Размьючиваем USB
+                # 3. Unmute USB
                 self._send_usb_mute(False)
             
             self.saved_edit_buffer_for_di = None
@@ -645,7 +645,7 @@ class MidiEngineMixin:
         self._log("[DI] Force Unmute USB Monitoring.")
         self._send_usb_mute(False)
 
-    # ══ LED индикатор ════════════════════════════
+    # ══ LED Indicator ════════════════════════════
 
     def _midi_led(self, direction):
         """HDD-LED indicator for MIDI activity. TX=yellow, RX=blue."""

@@ -24,7 +24,7 @@ def byteswap_h3e(data: bytearray) -> bytearray:
         b = idx * 2
         if b + 1 < len(out):
             out[b], out[b+1] = out[b+1], out[b]
-    # Три байта с offset 155: >>= 7 (boolean флаги в старшем бите)
+    # Three bytes at offset 155: >>= 7 (boolean flags in MSB)
     for i in range(3):
         if 155 + i < len(out):
             out[155 + i] >>= 7
@@ -87,7 +87,7 @@ def unpack_7to8(packed: list) -> bytearray:
     return bytearray(raw)
 
 def build_h3e_header(params: bytearray) -> bytes:
-    """Собираем 40-байтный заголовок .h3e."""
+    """Build the 40-byte .h3e header."""
     fixed = bytes([
         0x7D, 0x01, 0x00, 0x25, 0x02, 0x02, 0x00, 0x00,  # 0x08
         0x00, 0x14, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00,  # 0x10

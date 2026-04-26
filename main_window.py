@@ -108,7 +108,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._syncing_preset_idx = 0
         self._initial_sync_done = False
 
-        # Таймер для дебаунса запроса дампа при быстром переключении пресетов
+        # Timer for dump request debounce during fast preset switching
         self._dump_debounce = QTimer()
         self._dump_debounce.setSingleShot(True)
         self._dump_debounce.timeout.connect(self._debounced_dump)
@@ -117,22 +117,22 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._last_rendered_bid = None
         self._last_rendered_model = None
         
-        # Уровень логирования: 0 - выкл, 1 - инфо (интерфейс), 2 - дебаг (дамп MIDI в консоль)
+        # Log level: 0 - off, 1 - info (UI), 2 - debug (MIDI dump in console)
         self.log_level = 2
         
-        self._is_warming_up = False # Флаг для блокировки эха при прогреве блока
-        self._sync_start_time = 0   # Для замера времени загрузки пресета
+        self._is_warming_up = False # Flag to block echo during block warm-up
+        self._sync_start_time = 0   # To measure preset loading time
         
         self._is_preset_modified = False
         self._last_clean_dump = None
         self._ignore_live_modified = False
         
-        # Таймер для дебаунса полной перерисовки
+        # Timer for full rebuild debounce
         self._rebuild_debounce = QTimer()
         self._rebuild_debounce.setSingleShot(True)
         self._rebuild_debounce.timeout.connect(self._render_params)
         
-        # Блокировка для MIDI-обстрела (чтобы запросы не накладывались)
+        # Lock for MIDI bombardment (to prevent request overlap)
         self._midi_survey_lock = __import__('threading').Lock()
         self._is_surveying = False
         self.is_shifting = False
@@ -160,7 +160,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
         QTimer.singleShot(300, self._auto_connect)
 
-    # ── загрузка JSON/txt ──────────────────────────
+    # ── loading JSON/txt ──────────────────────────
 
     def _load_json(self, filename):
         path = os.path.join(SCRIPT_DIR, filename)
@@ -204,7 +204,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             if it: it.setText(f"{bank:02d}{sub}")
         self._log("🗑 Preset cache cleared!")
 
-    # ── сигнальная цепочка ─────────────────────────
+    # ── signal chain ─────────────────────────
 
     def _get_ordered_chain(self):
         vol  = self.blocks["VOL"]
@@ -230,7 +230,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         order = self._get_ordered_chain()
         self.chain_panel.rebuild(order, self.blocks, self.selected_id)
 
-    # ── выбор блока ────────────────────────────────
+    # ── block selection ────────────────────────────────
 
     def _select_block(self, bid):
         self.selected_id = bid
@@ -243,7 +243,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         
         self.block_title.setText(f"  {title_text}")
         
-        # Иконка эффекта из img_converted/
+        # Effect icon from img_converted/
         img_file = FX_IMG_MAP.get(b.name)
         if img_file:
             icon_path = os.path.join(SCRIPT_DIR, "img_converted", img_file)
@@ -259,7 +259,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.block_icon.setVisible(True)
         
         hm = getattr(self, "black_mode", False)
-        # Акцентный цвет применяем всегда для заголовка и кнопок, чтобы панель была "в тему"
+        # Accent color always applied to title and buttons to keep panel "themed"
         if hm:
             self.block_title.setStyleSheet(f"font-size:13pt; font-weight:bold; color:{col};")
             self.btn_on.setStyleSheet(f"""
@@ -272,7 +272,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 QPushButton:checked {{ background:{col}; color:white; font-weight: bold; border:1px solid {col}; }}
             """)
         else:
-            # В классическом режиме тоже подсвечиваем заголовок цветом категории
+            # In classic mode, also highlight title with category color
             self.block_title.setStyleSheet(f"font-size:13pt; font-weight:bold; color:{col};")
             self.btn_on.setStyleSheet(f"""
                 QPushButton {{ background:#1a3a1a; color:#4caf50; border:1px solid #2e7d32; }}
@@ -289,16 +289,16 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.btn_on.setText("ON" if b.is_on else "OFF")
         self.btn_on.blockSignals(False)
         
-        # Убираем кнопку включения у гейта и педали громкости
+        # Remove ON button for Gate and Volume pedals
         self.btn_on.setVisible(bid not in ["GATE", "VOL", "CAB"])
 
-        # Кнопка сохранения видна только в Mapping Mode
+        # Save button visible only in Mapping Mode
         if hasattr(self, "btn_save_cfg"):
             self.btn_save_cfg.setVisible(self.mapping_mode)
         if hasattr(self, "btn_clear_cache"):
             self.btn_clear_cache.setVisible(self.mapping_mode)
 
-        # PRE/POST кнопка: показываем только для movable
+        # PRE/POST button: show only for movable blocks
         is_movable = bid in ("VOL","FX1","FX2","FX3","REV")
         self.btn_pp.setVisible(is_movable)
         if is_movable:
@@ -307,7 +307,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.btn_pp.setText("POST" if b.pre_post == 1 else "PRE")
             self.btn_pp.blockSignals(False)
 
-        # Динамический цвет выделения в списках
+        # Dynamic selection color in lists
         self._update_list_accent(self.preset_list, col)
         self._update_list_accent(self.cat_list, col)
         self._update_list_accent(self.model_list, col)
@@ -315,19 +315,19 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._update_category_filter(bid)
         self._sync_browser_to_block(b)
         self._render_params()
-        # Обновляем выделение в цепочке БЕЗ пересборки — чтобы не убивать BlockButton под drag'ом
+        # Update chain selection WITHOUT rebuild — to avoid killing BlockButton during drag
         if hasattr(self, "chain_panel"):
             self.chain_panel.update_selection(bid)
         
-        # Опрашиваем текущие параметры блока при его выборе, чтобы UI был актуальным
+        # Poll current block parameters when selected to keep UI up-to-date
         if bid in ("FX1", "FX2", "FX3", "REV", "GATE"):
-            # Временно блокируем взвод звездочки, пока идут ответы на наш опрос (False Detect Protection)
+            # Temporarily block asterisk marking while poll responses are incoming (False Detect Protection)
             self._ignore_live_modified = True
             QTimer.singleShot(1000, lambda: setattr(self, "_ignore_live_modified", False))
             QTimer.singleShot(80, lambda: self._query_block_params(bid))
 
     def _update_category_filter(self, bid):
-        """Интеллектуальный фильтр категорий в зависимости от выбранного слота."""
+        """Intelligent category filter depending on the selected slot."""
         system_cats = ["Amp", "Cabinet", "Wah"]
         
         allowed = []
@@ -340,10 +340,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         elif bid == "WAH":
             allowed = ["Wah"]
         else:
-            # FX слоты: всё кроме системных
+            # FX slots: everything except system blocks
             allowed = [c for c in self.cats_data.keys() if c not in system_cats]
 
-        # Обновляем QListWidget
+        # Update QListWidget
         any_valid_selected = False
         for i in range(self.cat_list.count()):
             item = self.cat_list.item(i)
@@ -359,20 +359,20 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
                 item.setForeground(QColor("#555555"))
         
-        # Если текущая категория стала недоступной - сбрасываем список моделей
+        # If current category becomes unavailable - reset model list
         if not any_valid_selected:
             self.model_list.clear()
             self.cat_list.clearSelection()
             self.cat_list.setCurrentRow(-1)
 
-    # ── параметры ──────────────────────────────────
+    # ── parameters ──────────────────────────────────
 
     def _get_mapping(self, bid):
-        """Получить маппинг параметров для текущего блока. Приоритет UI JSON -> System Fixed -> Auto."""
+        """Get parameter mapping for the current block. Priority: UI JSON -> System Fixed -> Auto."""
         b = self.blocks[bid]
         model_hex = f"{b.model_id:02X}"
         
-        # 1. СИСТЕМНЫЕ ФИКСИРОВАННЫЕ (FALLBACK)
+        # 1. SYSTEM FIXED (FALLBACK)
         fixed = {
             "GATE": [
                 {"name":"Mode",     "hw_idx": 0x0C, "enabled":True, "step":1.0, "slot_id": 0x02, "values": ["Off", "Gate", "NR", "Gate+NR"], "hi_res": False},
@@ -407,7 +407,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             ],
         }
         
-        # МАППИНГ HW_IDX -> INDEX IN b.params
+        # MAPPING HW_IDX -> INDEX IN b.params
         HW_TO_IDX = {
             "AMP": {0x01:0, 0x02:1, 0x03:2, 0x04:3, 0x1D:4, 0x05:5, 0x2A:6, 0x27:7, 0x26:8, 0x28:9, 0x29:10, 0x25:11},
             "CAB": {0x24:0, 0x13:1},
@@ -418,7 +418,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
         if bid in fixed:
             res = fixed[bid]
-            # Добавляем инфо об индексе в кэше для каждой ручки
+            # Add cache index info for each knob
             if bid in HW_TO_IDX:
                 for c in res:
                     h = c.get("hw_idx")
@@ -426,7 +426,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                         c["cache_idx"] = HW_TO_IDX[bid][h]
             return res
         
-        # 2. ПОИСК В UI MAPPINGS (JSON ИЕРАРХИЯ)
+        # 2. SEARCH IN UI MAPPINGS (JSON HIERARCHY)
         # {model}_{block} -> {model}_FX_OTHER -> fx_config
         key = f"{model_hex}_{bid}"
         gen_key = f"{model_hex}_FX_OTHER"
@@ -442,11 +442,11 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 data_list = self.fx_config[model_hex].get("params", [])
 
         if not data_list:
-            # Полная тишина в конфигах — генерим пустые 6 ручек
+            # Total silence in configs — generating 6 empty knobs
             n = 6
             return [{"name":f"Param {i+1}","hw_idx":i,"enabled":True,"step":1.0} for i in range(n)]
 
-        # 4. СБОРКА МАППИНГА С ЗАПОЛНЕНИЕМ ПУСТОТ (ДО 6)
+        # 4. MAPPING ASSEMBLY WITH VOID FILLING (UP TO 6)
         n = 6
         mapping = []
         
@@ -461,15 +461,15 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     "type":    p.get("type", "continuous"),
                     "unit":    p.get("unit", "%")
                 }
-                # Динамически пробрасываем всё остальное (scaling, values, hw_max и т.д.)
+                # Dynamically pass everything else (scaling, values, hw_max, etc.)
                 for k, v in p.items():
                     if k not in p_obj:
-                        # Тонкая настройка имен для UI компонентов (ParamRow)
+                        # Fine-tuning names for UI components (ParamRow)
                         if k == "disp_min": p_obj["min_disp"] = v
                         elif k == "disp_max": p_obj["max_disp"] = v
                         else: p_obj[k] = v
                 
-                # Поправка для шаговых параметров
+                # Fix for stepped parameters
                 if p_obj["type"] == "steps_24":
                     p_obj["unit"] = "steps"
                     p_obj.setdefault("min_disp", -24)
@@ -478,7 +478,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
                 mapping.append(p_obj)
             else:
-                # Добиваем DUMMY ручками до нужного количества
+                # Fill with DUMMY knobs up to required amount
                 mapping.append({
                     "name":    f"Dummy {i+1}",
                     "hw_idx":  i,
@@ -491,13 +491,13 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         return mapping
 
     def _render_params(self):
-        """Рендерит или обновляет список параметров. Если модель не изменилась — только обновляет значения."""
+        """Renders or updates the parameter list. If model hasn't changed — only updates values."""
         bid = self.selected_id
         b = self.blocks.get(bid)
         if not b: return
         
         # --- SMART UPDATE ---
-        # Если мы отрисовываем тот же блок с той же моделью в том же режиме сервиса - НЕ пересоздаем виджеты, а просто плавно двигаем ползунки
+        # If rendering the same block with the same model in the same service mode - DON'T recreate widgets, just move sliders smoothly
         if (getattr(self, "_last_rendered_id", None) == bid 
             and getattr(self, "_last_rendered_model", None) == b.model_id
             and self._last_rendered_mapping == self.mapping_mode):
@@ -508,12 +508,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     d_idx = row.cfg.get("cache_idx")
                     if d_idx is None: d_idx = i
                     if 0 <= d_idx < len(b.params):
-                        # Плавно подвозим к текущему значению из памяти
+                        # Smoothly move to current memory value
                         row.animate_to(b.params[d_idx])
             return
 
-        # Если модель сменилась или другой блок - очищаем старое
-        # Перед удалением явно гасим анимации и таймеры (защита от крашей)
+        # If model changed or different block - clear old ones
+        # Before deletion, explicitly kill animations and timers (crash protection)
         for i in range(self.params_layout.count()):
             it = self.params_layout.itemAt(i)
             if it and it.widget() and hasattr(it.widget(), "prepare_for_deletion"):
@@ -527,7 +527,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         cfg_list = self._get_mapping(self.selected_id)
         
         for i, c in enumerate(cfg_list):
-            # В обычном режиме скрываем неактивные параметры
+            # In normal mode, hide inactive parameters
             if not self.mapping_mode and not c.get("enabled", True): continue
             
             d_idx = c.get("cache_idx")
@@ -547,25 +547,25 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
         self.params_layout.addStretch()
         
-        # Запоминаем что отрисовали
+        # Remember what was rendered
         self._last_rendered_id = bid
         self._last_rendered_model = b.model_id
         self._last_rendered_mapping = self.mapping_mode
 
     def _safe_animate(self, row, target_pct):
-        """Безопасно запускает анимацию, проверяя не удален ли виджет (защита от крашей)."""
+        """Safely starts animation, checking if widget is not deleted (crash protection)."""
         try:
             if row and row.parent() is not None:
                 row.animate_to(target_pct, duration=250)
         except RuntimeError:
-            pass # Объект уже удален, ну и хрен с ним
+            pass # Object already deleted, whatever
 
     def _on_param_changed(self, cfg, pct, p_idx):
         b = self.blocks[self.selected_id]
         hw_idx = cfg.get("hw_idx")
         mapping = self._get_mapping(self.selected_id)
         
-        # Ищем индекс в текущем маппинге
+        # Look for index in current mapping
         d_idx = cfg.get("cache_idx")
         if d_idx is None:
             for i, c in enumerate(mapping):
@@ -577,7 +577,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         if 0 <= d_idx < len(b.params):
             b.params[d_idx] = pct
 
-        # ── Тротлинг MIDI отправки (живой 0x63) ──
+        # ── MIDI sending throttling (live 0x63) ──
         THROTTLE_MS = 50
         
         if not hasattr(self, '_param_throttle'):
@@ -586,20 +586,20 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         bid = self.selected_id
         throttle_key = f"{bid}_{hw_idx}"
         
-        # Сохраняем последнее значение для финальной досылки
+        # Save last value for final resend
         if not hasattr(self, '_param_pending'):
             self._param_pending = {}
         self._param_pending[throttle_key] = (bid, cfg, pct)
         
         if throttle_key in self._param_throttle:
-            # Перевзводим таймер коммита (ползунок ещё крутится)
+            # Reset commit timer (slider still moving)
             if hasattr(self, '_commit_timer'):
                 self._commit_timer.start(300)
             if hasattr(self, '_commit_kick_timer'):
                 self._commit_kick_timer.stop()
             return
         
-        # Первый вызов — шлём сразу и запускаем таймер блокировки
+        # First call — send immediately and start lockout timer
         self._log(f"[UI] {bid} P{hw_idx:02X} → {pct:.1f}% (CacheIdx: {d_idx})")
         self._send_param(bid, cfg, pct)
         
@@ -618,7 +618,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         timer.timeout.connect(_on_throttle_expire)
         timer.start(THROTTLE_MS)
         
-        # ── Отложенный коммит (62→задержка→63) после idle 300мс ──
+        # ── Deferred commit (62→delay→63) after 300ms idle ──
         if not hasattr(self, '_commit_timer'):
             self._commit_timer = QTimer(self)
             self._commit_timer.setSingleShot(True)
@@ -630,19 +630,19 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._commit_kick_timer.timeout.connect(self._do_deferred_kick)
 
         self._commit_timer.start(300)
-        self._commit_kick_timer.stop() # Новое движение — отменяем старый пинок
+        self._commit_kick_timer.stop() # New movement — cancel old kick
 
     def _do_deferred_commit(self):
-        """Отложенный коммит: 62→250ms→63 на все ожидающие параметры."""
+        """Deferred commit: 62→250ms→63 for all pending parameters."""
         pending = getattr(self, '_pending_commits', {})
         if not pending or not self.midi_out:
             return
         
-        # 1. Шаг 1: 0x62 (COMMIT) на все слоты всех измененных параметров
+        # 1. Step 1: 0x62 (COMMIT) on all slots of all changed parameters
         for key, info in pending.items():
             bid = info["bid"]
             if bid in ["FX1", "FX2", "FX3", "REV"]:
-                # Повторяем маску перед коммитом для надежности
+                # Repeat mask before commit for reliability
                 b = self.blocks[bid]
                 mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
                 self._send_raw(mask_data)
@@ -651,15 +651,15 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 data_62 = self._make_sysex(s, info["hw_idx"], info["val"], hi_res=info["hi_res"], cmd=0x62)
                 self._send_raw(data_62)
         
-        # 2. Копируем в очередь для пинка и очищаем текущую
+        # 2. Copy to kick queue and clear current
         self._kick_queue = dict(pending)
         self._pending_commits.clear()
         
-        # 3. Через 250мс "догоняем" CMD 0x63, чтобы проц обновил живой звук
+        # 3. After 250ms "catch up" with CMD 0x63 to update live sound
         self._commit_kick_timer.start(250)
 
     def _do_deferred_kick(self):
-        """Финальный пинок CMD 0x63 после коммита."""
+        """Final CMD 0x63 kick after commit."""
         kicks = getattr(self, '_kick_queue', {})
         if not kicks or not self.midi_out:
             return
@@ -669,21 +669,21 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             b = self.blocks.get(bid)
             if not b: continue
             
-            # 1. Пинки (Kick/Mask) - ТОЛЬКО для FX блоков
+            # 1. Kicks (Kick/Mask) - ONLY for FX blocks
             if bid in ["FX1", "FX2", "FX3", "REV"]:
                 context_data = self._make_sysex(b.slot_id, 0x06, b.model_id, hi_res=True, cmd=0x63)
                 self._send_raw(context_data)
-                if bid != "FX3": # Для FX3 маска иногда мешает коммиту
+                if bid != "FX3": # For FX3, mask sometimes interferes with commit
                     mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
                     self._send_raw(mask_data)
             
-            # 2. Рассчитываем целевые слоты по логике a3d12f8 (Live Sound)
+            # 2. Calculate target slots according to a3d12f8 logic (Live Sound)
             p_slot = info.get("p_slot", b.slot_id)
             target_slots = []
             if bid in ["FX1", "FX2", "FX3", "REV"]:
-                target_slots = [p_slot + 0x20] # Для пинка шлем только в LIVE звук (+0x20)
+                target_slots = [p_slot + 0x20] # For kick, send only to LIVE sound (+0x20)
             elif p_slot == 0x00:
-                target_slots = [0x20] # AMP Live звук
+                target_slots = [0x20] # AMP Live sound
             else:
                 target_slots = [p_slot] # CAB, GATE, VOL, WAH
 
@@ -696,7 +696,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._kick_queue.clear()
 
     def _on_add_param(self):
-        self._log("Добавлен новый параметр (не сохранён)")
+        self._log("New parameter added (not saved)")
 
     def _save_mapping(self):
         b = self.blocks[self.selected_id]
@@ -712,12 +712,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             path = os.path.join(SCRIPT_DIR, "ui_mappings_v2.json")
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(self.ui_mappings, f, indent=2, ensure_ascii=False)
-            self._log(f"✅ Маппинг сохранён: {key}")
+            self._log(f"✅ Mapping saved: {key}")
 
-    # ── пресеты и дамп ─────────────────────────────
+    # ── presets and dump ─────────────────────────────
 
     def _update_preset_ui(self, pc, name=None):
-        """Централизованный метод обновления UI пресетов и состояния DI Mode."""
+        """Centralized method for updating preset UI and DI Mode state."""
         self.current_preset_num = pc
         if name: self.preset_name = name
         
@@ -752,7 +752,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         font = item.font()
         text = item.text()
         
-        # Убираем старую звездочку если есть
+        # Remove old asterisk if present
         if text.endswith(" *"):
             text = text[:-2]
             
@@ -770,7 +770,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         if self._is_preset_modified == state:
             return
         self._is_preset_modified = state
-        # Обновляем визуализацию текущего пресета
+        # Update current preset visualization
         for i in range(self.preset_list.count()):
             item = self.preset_list.item(i)
             if item.data(Qt.ItemDataRole.UserRole) == self.current_preset_num:
@@ -778,23 +778,23 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 break
 
     def _on_got_preset_no(self, pc):
-        """Получили номер пресета от железки — обновляем UI и ставим в очередь запрос дампа."""
-        # Всегда сбрасываем флаг изменений при подтверждении пресета (даже того же самого)
+        """Received preset number from hardware — updating UI and queuing dump request."""
+        # Always reset modified flag when confirming preset (even the same one)
         self._is_preset_modified = False
         self._last_clean_dump = None
 
         self._update_preset_ui(pc)
         self._pending_preset = pc
-        # Если пришло подтверждение от проца, значит он «очухался»,
-        # но дадим ему ещё 300мс на инициализацию эффектов.
-        # Это сбросит таймер от _on_prog_chg, если он работал.
+        # If confirmation came from CPU, it means it's "awake",
+        # but give it 300ms more for effect initialization.
+        # This will reset the timer from _on_prog_chg if it was running.
         self._dump_debounce.start(300)
-        self._log(f"Пресет подтверждён: #{pc}. Дамп через 300мс...")
+        self._log(f"Preset confirmed: #{pc}. Dump in 300ms...")
 
     def _on_dump_raw(self, raw):
-        """Прямой обработчик дампов приходящий из фонового потока."""
+        """Direct dump handler coming from background thread."""
         if getattr(self, "_is_warming_up", False):
-            return # Игнорируем эхо при "прогреве", чтобы не ломать UI
+            return # Ignore echo during "warm-up" to avoid breaking UI
             
         if len(raw) < 8 or raw[0] != 0xF0:
             return
@@ -816,7 +816,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 safe_raw[8], safe_raw[9], safe_raw[10] = 0x7F, 0x7F, 0x00
             self.saved_edit_buffer_for_di = safe_raw
             self._waiting_for_di_dump = False
-            self._log("[DI] Safe Edit Buffer получен.")
+            self._log("[DI] Safe Edit Buffer received.")
             if self.midi_out:
                 self.midi_out.send(mido.Message('program_change', program=self.di_preset))
                 self._send_usb_mute(True)
@@ -825,20 +825,20 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._parse_dump(raw)
 
     def _on_prog_chg(self, pc):
-        """Аппаратная смена пресета (MIDI C0 XX) — обновляем UI и заводим таймер страховки."""
+        """Hardware preset change (MIDI C0 XX) — updating UI and starting safety timer."""
         self._is_preset_modified = False
         self._last_clean_dump = None
         
         self._sync_start_time = time.time()
         self._update_preset_ui(pc)
-        self._log(f"Пресет изменён: {self.preset_lbl.text().split(': ')[-1]} (#{pc}) [Wait for 0x62 or fallback]")
+        self._log(f"Preset changed: {self.preset_lbl.text().split(': ')[-1]} (#{pc}) [Wait for 0x62 or fallback]")
         self._pending_preset = pc
         self._jump_to_amp_on_dump = True
         
-        # Показываем прелоадер на панели параметров
+        # Showing preloader on the parameters panel
         self._show_params_preloader(True)
 
-        # Заводим таймер на 1 секунду. Если прилетит ответ 0x62 раньше — таймер перевзведётся на 300мс.
+        # Starting 1-second timer. If 0x62 response arrives earlier — timer will be reset to 300ms.
         self._dump_debounce.start(1000)
 
     def _parse_dump(self, raw):
@@ -865,30 +865,30 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 self._sync_mode = False
                 self._save_preset_cache()
                 self._update_sync_ui()
-                self._log("✅ Синхронизация пресетов завершена.")
+                self._log("✅ Preset sync completed.")
             return
 
         data = parse_full_dump(raw)
         if not data:
             self._dump_retry_count = getattr(self, "_dump_retry_count", 0) + 1
             if self._dump_retry_count <= 3:
-                self._log(f"⚠️ Дамп не распознан (битый), повтор ({self._dump_retry_count}/3) через 500мс...")
+                self._log(f"⚠️ Dump not recognized (corrupted), retrying ({self._dump_retry_count}/3) in 500ms...")
                 QTimer.singleShot(500, self._debounced_dump)
             else:
-                self._log("❌ Дамп безнадёжно битый после 3 попыток. Проц не отвечает нормально.")
+                self._log("❌ Dump hopelessly corrupted after 3 attempts. CPU not responding normally.")
                 self._dump_retry_count = 0
             return
             
-        self._dump_retry_count = 0  # При успешном парсинге сбрасываем счётчик
+        self._dump_retry_count = 0  # Reset counter on successful parsing
         
-        # Детекция изменений (сравнение распакованного дампа)
+        # Change detection (comparing unpacked dump)
         current_u = data.get("_u")
         if current_u:
             if self._last_clean_dump is None:
-                # Базовое состояние после переключения или импорта
+                # Base state after switching or importing
                 self._last_clean_dump = list(current_u)
                 
-                # Если это был импорт, мы должны сохранить статус "изменено"
+                # If it was an import, we must maintain "modified" status
                 if getattr(self, "_imported_flag_pending", False):
                     self._set_preset_modified(True)
                     self._imported_flag_pending = False
@@ -901,7 +901,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.preset_name = data["preset_name"]
         self._update_preset_ui(self.current_preset_num, name=self.preset_name)
         
-        # Обновляем имя в списке пресетов (важно при импорте или переименовании)
+        # Update name in preset list (important for import or rename)
         idx = self.current_preset_num
         for i in range(self.preset_list.count()):
             item = self.preset_list.item(i)
@@ -964,16 +964,16 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         mic_pct = (data["mic_id"] / 7.0) * 100.0 if data["mic_id"] <= 7 else 0.0
         bc.params = [mic_pct, data["er_level"]]
 
-        # Дамп и так читает все параметры из памяти, но Pitch Glide (0x2F) 
-        # прячет их из-за связи с педалью экспрессии.
-        # Поэтому запускаем "умный" опрос, который дернет данные ТОЛЬКО для Pitch Glide,
-        # чтобы избежать DDoS'а процессора.
+        # Dump already reads all parameters from memory, but Pitch Glide (0x2F) 
+        # hides them due to expression pedal linking.
+        # So we start a "smart" poll that pulls data ONLY for Pitch Glide,
+        # to avoid CPU DDoS.
         if self.midi_out:
             QTimer.singleShot(600, lambda: self._query_all_fx_blocks())
 
         self._refresh_chain()
         if getattr(self, "_jump_to_amp_on_dump", True):
-            self._select_block("AMP")  # При смене пресета AMP — единственный блок, который всегда грузится корректно
+            self._select_block("AMP")  # On preset change, AMP is the only block that always loads correctly
             self._jump_to_amp_on_dump = False
         else:
             self._select_block(self.selected_id)
@@ -1012,7 +1012,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 self._imported_flag_pending = True
                 self._sig_set_modified.emit(True) # Import is definitely a change
                 self._log(f"📥 Imported: {os.path.basename(filename)}")
-                # Дадим процессору время проглотить дамп, затем запросим его для обновления UI
+                # Give CPU time to swallow the dump, then request it to update UI
                 QTimer.singleShot(600, self._request_dump)
         except Exception as e:
             self._log(f"❌ Import error: {e}")
@@ -1042,8 +1042,8 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     f.write(bytes(raw_sysex))
             self._log(f"📤 Exported successfully: {os.path.basename(filename)}")
             
-            # Поскольку мы перехватили дамп, UI не обновится (хотя он и так актуален)
-            # Просто чтобы снять флаги (например _is_warming_up)
+            # Since we intercepted the dump, UI won't update (though it's already current)
+            # Just to clear flags (e.g., _is_warming_up)
             self._parse_dump(raw_sysex)
         except Exception as e:
             self._log(f"❌ Export error: {e}")
@@ -1101,7 +1101,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         return (hw_idx - 1) + offset
 
     def _update_slider(self, hw_idx, pct):
-        """Обновляет слайдер с нужным hw_idx — плавно, без эмиссии сигнала."""
+        """Updates slider with specified hw_idx — smoothly, without signal emission."""
         for i in range(self.params_layout.count()):
             it = self.params_layout.itemAt(i)
             if it and isinstance(it.widget(), ParamRow):
@@ -1116,7 +1116,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     break
 
     def _update_block_state_ui(self, bid):
-        """Обновляет визуальное состояние кнопок On/Off и Pre/Post для блока."""
+        """Updates visual state of On/Off and Pre/Post buttons for the block."""
         if bid not in self.blocks: return
         b = self.blocks[bid]
         
@@ -1142,7 +1142,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 self.btn_pp.setText("POST" if b.pre_post == 1 else "PRE")
                 self.btn_pp.blockSignals(False)
 
-        # Обновляем стиль кнопки в сигнальной цепи (чтобы перерисовывался On/Off стейт)
+        # Update button style in signal chain (to redraw On/Off state)
         if hasattr(self, "chain_panel"):
             for btn in self.chain_panel._buttons:
                 if btn.state.block_id == bid:
@@ -1150,8 +1150,8 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     btn.update()
 
     def _query_block_params(self, bid):
-        """Запрашивает значения ручек для конкретного блока. 
-        Запускается в отдельном потоке с блокировкой.
+        """Polls knob values for a specific block. 
+        Runs in a separate thread with locking.
         """
         if getattr(self, "is_shifting", False):
             return
@@ -1167,12 +1167,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     self._is_surveying = False
                     return
                 
-                # q_id: для FX и AMP добавляем 0x20, для слота 0x02 (GATE/CAB/...) оставляем как есть
+                # q_id: for FX and AMP add 0x20, for slot 0x02 (GATE/CAB/...) leave as is
                 q_id = b.slot_id
                 if q_id != 0x02:
                     q_id += 0x20
                 
-                # Получаем список индексов параметров из маппинга блока
+                # Get parameter index list from block mapping
                 mapping = self._get_mapping(bid)
                 hw_indices = []
                 for p_cfg in mapping:
@@ -1199,7 +1199,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         __import__('threading').Thread(target=_target, daemon=True).start()
 
     def _query_all_fx_blocks(self):
-        """Полная синхронизация всех FX слотов (последовательно в одном потоке)."""
+        """Full sync of all FX slots (sequentially in one thread)."""
         if not self.midi_out: return
         
         def _target():
@@ -1219,7 +1219,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                         self._do_query_block_sync(bid)
                         time.sleep(0.010)
                 
-                # Дополнительно опрашиваем статус головы (AMP)
+                # Additionally poll amp head status (AMP)
                 self._send_raw([0x00, 0x01, 0x0C, 0x14, 0x00, 0x60, 0x00, 0x02, 0x14])
                 
                 if not pg_found:
@@ -1230,13 +1230,13 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 self._is_surveying = False
                 self._log(f"✅ Full sync completed in {elapsed:.2f} sec")
                 
-                # Прячем прелоадер
+                # Hide preloader
                 self._show_params_preloader(False)
 
         __import__('threading').Thread(target=_target, daemon=True).start()
 
     def _show_params_preloader(self, show=True):
-        """Показывает/скрывает локальный прелоадер поверх панели параметров."""
+        """Shows/hides local preloader on top of the parameters panel."""
         if not hasattr(self, "params_panel"): return
         
         if show:
@@ -1254,7 +1254,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 """)
                 self.params_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
                 
-                # Создаем эффект блюра именно ДЛЯ КАРТОЧКИ
+                # Create blur effect specifically FOR THE CARD
                 self.params_overlay_blur = QGraphicsBlurEffect(self.params_overlay)
                 self.params_overlay.setGraphicsEffect(self.params_overlay_blur)
             
@@ -1262,7 +1262,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.params_overlay.show()
             self.params_overlay.raise_()
             
-            # Анимация "фокусировки" (размытие -> четкость)
+            # "Focus" animation (blur -> clarity)
             self.params_overlay_blur.setEnabled(True)
             self._blur_anim = QPropertyAnimation(self.params_overlay_blur, b"blurRadius")
             self._blur_anim.setDuration(400)
@@ -1278,16 +1278,16 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._spinner_timer.start(80)
         else:
             if hasattr(self, "params_overlay"):
-                # Уходим тоже красиво через прозрачность или просто прячем
+                # Exit gracefully via transparency or just hide
                 self.params_overlay.hide()
             if hasattr(self, "_spinner_timer"):
                 self._spinner_timer.stop()
 
     def _update_params_spinner(self):
-        """Анимация спиннера и обновление геометрии (25% по центру)."""
+        """Spinner animation and geometry update (25% centered)."""
         if not hasattr(self, "params_overlay") or not self.params_overlay.isVisible(): return
         
-        # Анимация текста
+        # Text animation
         spinners = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
         self._spinner_idx = (self._spinner_idx + 1) % len(spinners)
         self.params_overlay.setText(spinners[self._spinner_idx])
@@ -1327,7 +1327,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def _log_ui(self, msg):
         """UI update method, called only via signal."""
-        if getattr(self, "log_level", 1) == 0: return # Полная тишина
+        if getattr(self, "log_level", 1) == 0: return # Total silence
         
         if hasattr(self, 'status_lbl'):
             self.status_lbl.setText(msg)
@@ -1693,7 +1693,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 font-weight: bold;
             }}
             
-            /* --- СТИЛЬНЫЕ СКРОЛЛБАРЫ --- */
+            /* --- STYLISH SCROLLBARS --- */
             QScrollBar:vertical {{
                 border: none;
                 background: transparent;
@@ -1866,13 +1866,13 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.cat_list.blockSignals(True)
         self.model_list.blockSignals(True)
         try:
-            # 1. Находим и выделяем категорию
+            # 1. Find and select category
             target_cat = b.category
             found_cat = False
             for i in range(self.cat_list.count()):
                 it = self.cat_list.item(i)
                 if it.text() == target_cat:
-                    # Оптимизация: пересобираем список моделей только если категория РЕАЛЬНО сменилась
+                    # Optimization: rebuild model list only if category REALLY changed
                     if self.cat_list.currentItem() != it:
                         self.cat_list.setCurrentItem(it)
                         self._on_cat_click(it)
@@ -1880,10 +1880,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                     break
             
             if not found_cat:
-                self.model_list.clear() # Если вдруг категория не из списка (None и т.д.)
+                self.model_list.clear() # If category is not in list (None, etc.)
                 return
 
-            # 2. Находим и выделяем конкретную модель
+            # 2. Find and select specific model
             target_name = b.name
             for i in range(self.model_list.count()):
                 it = self.model_list.item(i)
@@ -1895,7 +1895,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self.cat_list.blockSignals(False)
             self.model_list.blockSignals(False)
 
-    # ── обработчики ────────────────────────────────
+    # ── handlers ────────────────────────────────
 
     def _on_mapping_toggle(self, v):
         self.mapping_mode = v
@@ -1912,25 +1912,25 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._log(f"Mapping Mode: {'ON' if v else 'OFF'}")
 
     def _on_prepost_drop(self, bid, new_pp):
-        """Zone 1: только флаг, без свапа."""
+        """Zone 1: flag only, no swap."""
         flip_prepost(bid, new_pp, self.blocks)
         self._send_pre_post(bid)
-        self._refresh_chain()  # Перестраиваем цепочку — блок перепрыгнул PRE/POST
+        self._refresh_chain()  # Rebuild chain — block jumped PRE/POST
         self._select_block(bid)
 
     def _on_shift_requested(self, src_bid: str, insert_before_bid: str, new_pp_hint: int):
-        """Zone 2: вставка со сдвигом остальных блоков (Free Routing)."""
+        """Zone 2: insertion with shifting other blocks (Free Routing)."""
         if not getattr(self, "experimental_free_routing", False):
             return self._on_prepost_drop(src_bid, new_pp_hint)
 
         swappable = ["FX1", "FX2", "FX3", "REV"]
         
-        # 1. Запоминаем желаемый pre_post для каждого контента
+        # 1. Store desired pre_post for each content
         desired_pp = {}
         for bid in swappable:
             desired_pp[bid] = new_pp_hint if bid == src_bid else self.blocks[bid].pre_post
 
-        # 2. Выстраиваем желаемую визуальную последовательность
+        # 2. Arrange desired visual sequence
         pre_fx  = [bid for bid in swappable if self.blocks[bid].pre_post == 0]
         post_fx = [bid for bid in swappable if self.blocks[bid].pre_post == 1]
         v_order = pre_fx + post_fx
@@ -1944,7 +1944,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         else:
             v_order.append(src_bid)
 
-        # 3. Вычисляем физические слоты, которые реально изменятся
+        # 3. Calculate physical slots that will actually change
         changed_slots = []
         for phys_slot, content_bid in zip(swappable, v_order):
             if content_bid != phys_slot or desired_pp[content_bid] != self.blocks[phys_slot].pre_post:
@@ -1953,24 +1953,24 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         if not changed_slots:
             return
 
-        # 4. Применяем контент в физические слоты
+        # 4. Apply content to physical slots
         apply_visual_order(v_order, self.blocks)
         
-        # 5. Применяем pre_post
+        # 5. Apply pre_post
         for phys_slot, content_bid in zip(swappable, v_order):
             self.blocks[phys_slot].pre_post = desired_pp[content_bid]
 
-        # 6. Отправляем MIDI
+        # 6. Send MIDI
         self._execute_shift(changed_slots)
         self._refresh_chain()
         
-        # Визуально выделяем физический слот, куда упал наш контент
+        # Visually highlight physical slot where content landed
         new_phys_slot = swappable[v_order.index(src_bid)]
         self._select_block(new_phys_slot)
         self._log(f"⇄ Zone-2 shift: {src_bid} moved -> {new_phys_slot} (Changed: {changed_slots})")
 
     def _on_unconditional_swap(self, src_bid: str, tgt_bid: str):
-        """Zone 3: drop прямо на блок, чистый свап, pre/post не трогаем."""
+        """Zone 3: drop directly on block, pure swap, pre/post untouched."""
         if not getattr(self, "experimental_free_routing", False):
             return
 
@@ -1983,15 +1983,15 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     def _execute_shift(self, bids: list[str]):
         self._set_preset_modified(True)
-        """Массовая отправка MIDI для списка блоков после сдвига/свапа.
-        Требует чтобы routing.py уже переставил данные в BlockState.
-        Порядок: OFF всем → pre/post → fx_type → пауза → параметры → ON всем → re-poll.
+        """Bulk MIDI send for list of blocks after shift/swap.
+        Requires routing.py to have already rearranged data in BlockState.
+        Order: OFF all → pre/post → fx_type → pause → parameters → ON all → re-poll.
         """
         if not bids: return
         
         self.is_shifting = True
 
-        # Сохраняем финальный is_on и слепок параметров
+        # Store final is_on and parameter snapshot
         final_on = {}
         snapshots = {}
         for bid in bids:
@@ -2000,15 +2000,15 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             snapshots[bid] = list(self.blocks[bid].params)
             self._send_on_off(bid)
 
-        # pre/post и fx_type
+        # pre/post and fx_type
         for bid in bids:
             self._send_pre_post(bid)
         for bid in bids:
             self._send_fx_type(bid)
 
-        # Отложенная отправка параметров
+        # Deferred parameter sending
         def _send_params_delayed():
-            # Параметры
+            # Parameters
             for bid in bids:
                 b = self.blocks[bid]
                 mapping = self._get_mapping(bid)
@@ -2017,11 +2017,11 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 context_data = self._make_sysex(b.slot_id, 0x06, b.model_id, hi_res=True, cmd=0x63)
                 self._send_raw(context_data)
 
-                # 2. Шлём "Dirty Bit" (0A 7F) в основной слот блока
+                # 2. Send "Dirty Bit" (0A 7F) to block's main slot
                 mask_data = self._make_sysex(b.slot_id, 0x0A, 0x7F, hi_res=False, cmd=0x63)
                 self._send_raw(mask_data)
                 
-                # 2. Восстанавливаем параметры из слепка
+                # 2. Restore parameters from snapshot
                 b.params = list(snapshots[bid])
                 self._pad_params(b, len(mapping))
                 
@@ -2053,7 +2053,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                         
                         self._log(f"→ RESTORE {bid} P{hw_idx:02X} = {val} (Live+Buffer)")
                         import time
-                        # Для FX3 даем больше времени на запись
+                        # For FX3, give more time for writing
                         time.sleep(0.015 if bid == "FX3" else 0.005)
 
             for bid in bids:
@@ -2075,7 +2075,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
     @staticmethod
     def _pad_params(block, target_len: int):
-        """Дополняет block.params до target_len нейтральными значениями (50%)."""
+        """Pads block.params up to target_len with neutral values (50%)."""
         while len(block.params) < target_len:
             block.params.append(50.0)
 
@@ -2094,7 +2094,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._refresh_chain()
 
     def _on_block_right_click(self, bid):
-        """ПКМ по блоку в цепи: переключает ON/OFF (Bypass)."""
+        """RMB on block in chain: toggles ON/OFF (Bypass)."""
         # Gate, Volume and Cabinet on HD300 usually are not switched like that.
         if bid in ["GATE", "VOL", "CAB"]:
             return
@@ -2102,7 +2102,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         b = self.blocks[bid]
         b.is_on = not b.is_on
         
-        # Если блок сейчас выбран - синхронизируем кнопку в панели настроек
+        # If block is currently selected - sync button in settings panel
         if bid == self.selected_id:
             self.btn_on.blockSignals(True)
             self.btn_on.setChecked(b.is_on)

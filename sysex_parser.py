@@ -1,5 +1,5 @@
 """
-SysEx парсер для POD HD300: распаковка и разбор полного дампа пресета.
+SysEx parser for POD HD300: unpacking and parsing full preset dumps.
 """
 
 from constants import FX_NAMES, WAH_NAMES
@@ -19,36 +19,36 @@ def unpack_sysex(data):
 
 
 def parse_full_dump(raw):
-    """raw = полные байты дампа включая F0...F7"""
+    """raw = full dump bytes including F0...F7"""
     if len(raw) < 30 or raw[0] != 0xF0:
         return None
-    # HD300 preset dump = 197 байт, edit buffer dump = 192 байта.
-    # Если длина отличается, скорее всего произошла потеря байта в MIDI потоке.
+    # HD300 preset dump = 197 bytes, edit buffer dump = 192 bytes.
+    # If the length differs, a byte was likely lost in the MIDI stream.
     VALID_LENS = {192, 197}
     if len(raw) not in VALID_LENS:
-        print(f"[PARSE] ⚠️ Неожиданная длина дампа: {len(raw)} (допустимо: {VALID_LENS}). Дамп отброшен!")
+        print(f"[PARSE] ⚠️ Unexpected dump length: {len(raw)} (allowed: {VALID_LENS}). Dump discarded!")
         return None
     result = {}
-    # пробуем найти имя пресета (может быть смещение)
+    # try to find the preset name (there might be an offset)
     preset_name = "".join(
         chr(c) for c in raw[12:28] if 32 <= c <= 126
     ).strip()
-    # попробуем другой диапазон если имя не нашли
+    # try another range if the name wasn't found
     if not preset_name:
         preset_name = "".join(
             chr(c) for c in raw[10:26] if 32 <= c <= 126
         ).strip()
     result["preset_name"] = preset_name
-    # Пробуем разные стартовые позиции для unpack
-    # HD300: данные начинаются с raw[28] (проверено test_decode.py)
+    # Try different starting positions for unpack
+    # HD300: data starts at raw[28] (verified by test_decode.py)
     u = unpack_sysex(raw[28:-1])
     if len(u) < 100:
-        # попробуем с raw[26]
+        # try with raw[26]
         u = unpack_sysex(raw[26:-1])
     if len(u) < 100:
-        print(f"[PARSE] Слишком мало данных после unpack: {len(u)}")
+        print(f"[PARSE] Too little data after unpack: {len(u)}")
         return None
-    print(f"[PARSE] Распакованы {len(u)} байт, имя: '{preset_name}'")
+    print(f"[PARSE] Unpacked {len(u)} bytes, name: '{preset_name}'")
     result["_u"] = u
 
     def r8(hex_addr):

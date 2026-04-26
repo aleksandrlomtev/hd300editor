@@ -1,5 +1,5 @@
 """
-WinAPI хелперы для Windows 10/11: DWM, темная тема, window chrome.
+WinAPI helpers for Windows 10/11: DWM, dark mode, window chrome.
 """
 
 import sys
@@ -45,4 +45,4 @@ if sys.platform == "win32":
     DWMWA_WINDOW_CORNER_PREFERENCE = 33
     DWMWA_CAPTION_COLOR = 35
     DWMWA_TEXT_COLOR = 36
-    DWMWA_SYSTEMBACKDROP_TYPE = 38 # Чтобы вырубить Mica
+    DWMWA_SYSTEMBACKDROP_TYPE = 38 # To disable Mica
