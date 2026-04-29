@@ -138,7 +138,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.is_shifting = False
 
         self.cats_data["Amp"] = list(AMP_NAMES.values())
-        self.cats_data["Cabinet"] = list(CAB_NAMES.values())
+        self.cats_data["Cabinet"] = [name for name in CAB_NAMES.values() if name != "Matched Cab"]
         self.cats_data["Wah"] = list(WAH_NAMES.values())
 
         self._sig_sysex.connect(self._on_sysex)
@@ -418,6 +418,15 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
         if bid in fixed:
             res = fixed[bid]
+            
+            # Special case for Bass Cabinet (115 Flip Top) - different mic list
+            if bid == "CAB" and b.model_id == 0x11:
+                # Replace microphone list for bass cab
+                res[0]["values"] = [
+                    "57 on xs", "421 dyn", "12 dyn", "112 dyn", 
+                    "20 dyn", "7 dyn", "40 dyn", "47 cond"
+                ]
+
             # Add cache index info for each knob
             if bid in HW_TO_IDX:
                 for c in res:
@@ -1420,7 +1429,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.btn_di = DiModeButton("DI MODE")
         self.btn_di.setFixedWidth(100)
         self.btn_di.setStyleSheet("background-color: #333; color: #888; font-weight: bold; border: 1px solid #555; border-radius: 4px;")
-        self.btn_di.setToolTip("Left Click: Toggle DI (32A + Mute), Right Click: Unmute (Failsafe)")
+        self.btn_di.setToolTip("Left Click: Toggle DI (Empty Preset + USB monitor mute), Right Click: Unmute (Failsafe)")
         self.btn_di.clicked.connect(self._toggle_di_mode)
         self.btn_di.rightClicked.connect(self._force_unmute_usb)
         top_lay.addWidget(self.btn_di)
