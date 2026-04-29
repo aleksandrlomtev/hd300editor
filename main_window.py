@@ -1436,6 +1436,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
         self.btn_dump = QPushButton("↻ Dump")
         self.btn_dump.clicked.connect(self._request_dump)
+        self.btn_dump.setToolTip("Dump current preset from edit buffer to editor")
         top_lay.addWidget(self.btn_dump)
 
         self.btn_mapping = QPushButton("🔧 Mapping Mode")

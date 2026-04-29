@@ -279,7 +279,10 @@
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
-      "unit": "%"
+      "unit": "%",
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
     },
     {
       "name": "LO MID",
@@ -287,7 +290,10 @@
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
-      "unit": "%"
+      "unit": "%",
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
     },
     {
       "name": "HI MID",
@@ -295,7 +301,10 @@
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
-      "unit": "%"
+      "unit": "%",
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
     },
     {
       "name": "HIGH",
@@ -303,7 +312,10 @@
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
-      "unit": "%"
+      "unit": "%",
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
     },
     {
       "name": "Shift",
@@ -315,7 +327,7 @@
     },
     {
       "name": "Dummy 6",
-      "hw_idx": 6,
+      "hw_idx": 0,
       "enabled": true,
       "step": 1.0,
       "type": "continuous",
@@ -2742,7 +2754,7 @@
     },
     {
       "name": "Dummy 6",
-      "hw_idx": 5,
+      "hw_idx": 0,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
@@ -17609,6 +17621,140 @@
     {
       "name": "Dummy 6",
       "hw_idx": 5,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "24_REV": [
+    {
+      "name": "LO FREQ",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "LO MID",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "HI MID",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "HIGH",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "Shift",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
+      "enabled": false,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%"
+    }
+  ],
+  "24_FX1": [
+    {
+      "name": "LO FREQ",
+      "hw_idx": 1,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "LO MID",
+      "hw_idx": 2,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "HI MID",
+      "hw_idx": 3,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "HIGH",
+      "hw_idx": 4,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151,
+      "min_disp": -12.0,
+      "max_disp": 12.0,
+      "suffix": "dB"
+    },
+    {
+      "name": "Shift",
+      "hw_idx": 5,
+      "enabled": true,
+      "step": 1.0,
+      "type": "continuous",
+      "unit": "%",
+      "hw_max": 2097151
+    },
+    {
+      "name": "Dummy 6",
+      "hw_idx": 0,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",
