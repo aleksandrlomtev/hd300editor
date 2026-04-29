@@ -96,6 +96,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.load_edit_buffer = self.settings.get("load_edit_buffer", True)
         self.experimental_free_routing = self.settings.get("experimental_free_routing", False)
         self.di_preset = self.settings.get("di_preset", 124)
+        self.unlock_mapping = self.settings.get("unlock_mapping", False)
         
         self.current_preset_num = 0
         self.saved_preset_for_di = None
@@ -179,6 +180,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.settings["load_edit_buffer"] = getattr(self, "load_edit_buffer", True)
         self.settings["experimental_free_routing"] = getattr(self, "experimental_free_routing", False)
         self.settings["di_preset"] = getattr(self, "di_preset", 124)
+        self.settings["unlock_mapping"] = getattr(self, "unlock_mapping", False)
         path = os.path.join(SCRIPT_DIR, "settings.json")
         try:
             with open(path, "w", encoding="utf-8") as f:
@@ -1355,6 +1357,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             load_edit_buffer=getattr(self, "load_edit_buffer", True),
             experimental_free_routing=getattr(self, "experimental_free_routing", False),
             di_preset=getattr(self, "di_preset", 124),
+            unlock_mapping=getattr(self, "unlock_mapping", False),
         )
         
         def on_sync(s):
@@ -1384,10 +1387,17 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._save_settings()
             self._update_preset_ui(self.current_preset_num)
             
+        def on_unlock(s):
+            self.unlock_mapping = (s == 2)
+            if hasattr(self, "btn_mapping"):
+                self.btn_mapping.setVisible(self.unlock_mapping)
+            self._save_settings()
+            
         dlg.cb_sync.stateChanged.connect(on_sync)
         dlg.cb_black.stateChanged.connect(on_black)
         dlg.cb_buf.stateChanged.connect(on_buf)
         dlg.cb_free.stateChanged.connect(on_free)
+        dlg.cb_mapping.stateChanged.connect(on_unlock)
         dlg.sb_di.valueChanged.connect(on_di_val)
         
         dlg.exec()
@@ -1442,6 +1452,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self.btn_mapping = QPushButton("🔧 Mapping Mode")
         self.btn_mapping.setCheckable(True)
         self.btn_mapping.toggled.connect(self._on_mapping_toggle)
+        self.btn_mapping.setVisible(getattr(self, "unlock_mapping", False))
         top_lay.addWidget(self.btn_mapping)
 
         self.btn_settings = QPushButton("⚙ Settings")

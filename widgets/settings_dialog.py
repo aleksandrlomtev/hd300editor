@@ -60,10 +60,15 @@ class SettingsDialog(QDialog):
         self.sb_di.valueChanged.connect(self._update_di_info)
         self._update_di_info(self.sb_di.value())
         
+        self.cb_mapping = QCheckBox("Unlock Mapping Mode (🔧 icon in top bar)")
+        self.cb_mapping.setChecked(kwargs.get("unlock_mapping", False))
+        self.cb_mapping.setToolTip("Enables the button to enter Mapping Mode for editing parameter ranges and IDs.")
+
         lay.addWidget(self.cb_sync)
         lay.addWidget(self.cb_black)
         lay.addWidget(self.cb_buf)
         lay.addWidget(self.cb_free)
+        lay.addWidget(self.cb_mapping)
         lay.addSpacing(10)
         lay.addLayout(di_lay)
 

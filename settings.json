@@ -4,5 +4,6 @@
     "remove_borders": true,
     "load_edit_buffer": true,
     "experimental_free_routing": true,
-    "di_preset": 124
+    "di_preset": 124,
+    "unlock_mapping": false
 }
