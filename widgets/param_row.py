@@ -330,7 +330,7 @@ class ParamRow(QWidget):
     def animate_to(self, target_pct, start_pct=None, duration=300, easing=QEasingCurve.Type.OutCubic):
         """Smoothly animates the slider to the target value (% 0-100)."""
         self._target_pct = target_pct
-        if not self.slider or not self.isVisible():
+        if not self.slider or not self.isVisible() or self.cfg.get("discrete_steps", 0) > 1:
             self.set_pct(target_pct)
             return
 
