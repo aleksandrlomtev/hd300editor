@@ -2869,7 +2869,7 @@
     },
     {
       "name": "dummy",
-      "hw_idx": 0,
+      "hw_idx": 4,
       "enabled": false,
       "step": 1.0,
       "type": "continuous",

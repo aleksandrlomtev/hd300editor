@@ -34,7 +34,7 @@ from invalid_wheelchair import warmup_4band_eq # Import shameful hacks
 from routing import flip_prepost, swap_blocks, apply_visual_order
 from preset_utils import h3e_to_sysex_bytes, syx_bytes_to_h3e
 from midi_engine import MidiEngineMixin, MIDO_OK
-from widgets import ParamRow, SignalChainPanel, DiModeButton, SettingsDialog
+from widgets import ParamRow, SignalChainPanel, DiModeButton, SettingsDialog, LogConsole, ClickableStatusLabel
 
 if sys.platform == "win32":
     import ctypes
@@ -154,10 +154,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         self._sig_refresh_chain.connect(self._refresh_chain)
         self._sig_update_slider.connect(self._update_slider)
 
+        self.console = LogConsole(self)
         self._build_ui()
         self._apply_styles()
         self._refresh_chain()
         self._select_block("FX1")
+
 
         QTimer.singleShot(300, self._auto_connect)
 
@@ -1340,11 +1342,21 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         """UI update method, called only via signal."""
         if getattr(self, "log_level", 1) == 0: return # Total silence
         
+        # 1. All logs always go to the console
+        if hasattr(self, 'console'):
+            self.console.append_log(msg)
+
+        # 2. Status bar gets only "clean" info (no raw MIDI traffic)
         if hasattr(self, 'status_lbl'):
-            self.status_lbl.setText(msg)
+            technical = ("[MIDI-TX]", "[MIDI-RX]", "→ PARAM", "✓ COMMIT", "→ Requesting")
+            if not any(msg.startswith(p) for p in technical):
+                self.status_lbl.setText(msg)
+
         try:
             if getattr(self, "log_level", 1) >= 1:
-                print(f"[HD300] {msg}")
+                # Keep stdout for system console if needed
+                if not any(msg.startswith(p) for p in ("[MIDI-TX]", "[MIDI-RX]")):
+                     print(f"[HD300] {msg}")
         except UnicodeEncodeError:
             if getattr(self, "log_level", 1) >= 1:
                 print(f"[HD300] {msg}".encode("ascii", "replace").decode("ascii"))
@@ -1651,11 +1663,12 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         splitter.setStretchFactor(2, 1)
 
         # ── Status bar ──
-        self.status_lbl = QLabel("Ready.")
+        self.status_lbl = ClickableStatusLabel("Ready.")
         self.status_lbl.setFixedHeight(22)
         self.status_lbl.setStyleSheet(
             "background:#111; color:#666; padding: 2px 12px; font-size:8pt;"
         )
+        self.status_lbl.doubleClicked.connect(self.console.show)
         main.addWidget(self.status_lbl)
 
     def _apply_styles(self):

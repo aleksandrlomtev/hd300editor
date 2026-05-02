@@ -54,11 +54,11 @@ class MidiEngineMixin:
         if getattr(self, "log_level", 1) >= 2:
             if msg.type == 'sysex':
                 hex_str = " ".join(f"{b:02X}" for b in [0xF0] + list(msg.data) + [0xF7])
-                print(f"[MIDI-RX] {hex_str}")
+                self._log(f"[MIDI-RX] {hex_str}")
             elif msg.type == 'program_change':
-                print(f"[MIDI-RX] Program Change: {msg.program}")
+                self._log(f"[MIDI-RX] Program Change: {msg.program}")
             elif msg.type == 'control_change':
-                print(f"[MIDI-RX] CC: {msg.control:02X} = {msg.value:02X}")
+                self._log(f"[MIDI-RX] CC: {msg.control:02X} = {msg.value:02X}")
 
         if msg.type == 'sysex':
             raw = [0xF0] + list(msg.data) + [0xF7]
@@ -320,7 +320,7 @@ class MidiEngineMixin:
             try:
                 if getattr(self, "log_level", 1) >= 2:
                     hex_str = " ".join(f"{b:02X}" for b in ([0xF0] + data + [0xF7] if data[0] != 0xF0 else data))
-                    print(f"[MIDI-TX] {hex_str}")
+                    self._log(f"[MIDI-TX] {hex_str}")
                 
                 self.midi_out.send(mido.Message('sysex', data=data))
                 self._sig_midi_led.emit("tx")
