@@ -121,7 +121,7 @@ def parse_full_dump(raw):
         state_b   = r8(spec["state_addr"])
         is_on     = bool(state_b & 0x04)
         is_post   = bool(state_b & 0x02)
-        params    = [pct_from_u(p_idx) for p_idx in spec["param_indices"]]
+        params    = {i: pct_from_u(p_idx) for i, p_idx in enumerate(spec["param_indices"])}
 
         result["fx"][slot] = {
             "model_id": model_id,
@@ -131,7 +131,7 @@ def parse_full_dump(raw):
             "params":   params,
         }
     rev_id = r8("6C") & 0x7F
-    rev_params = [pct_from_u(p) for p in [120, 122, 124, 126, 128, 130]]
+    rev_params = {i: pct_from_u(p) for i, p in enumerate([120, 122, 124, 126, 128, 130])}
     result["fx"]["REV"] = {
         "model_id": rev_id,
         "name":     FX_NAMES.get(rev_id, f"0x{rev_id:02X}"),

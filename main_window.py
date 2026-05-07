@@ -954,7 +954,8 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             b.name     = fx["name"] if fx["name"] != "NONE" else "NONE"
             b.is_on    = fx["is_on"]
             b.pre_post = 1 if fx["is_post"] else 0
-            b.params   = fx["params"]
+            mapping    = self._get_mapping(bid)
+            b.params   = [fx["params"].get(cfg.get("hw_idx", 0), 50.0) for cfg in mapping]
             b.category = self._find_cat(b.name)
             if bid == "REV" and b.category == "None":
                 b.category = "Reverb"
@@ -2057,7 +2058,10 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 
                 # 2. Restore parameters from snapshot
                 b.params = list(snapshots[bid])
-                self._pad_params(b, len(mapping))
+                
+                if not b.params:
+                    self._log(f"⏩ Skipping parameter send for {bid} (empty snapshot, hardware keeps defaults)")
+                    continue
                 
                 for cfg, pct in zip(mapping, b.params):
                     if cfg.get("enabled", True):
@@ -2106,12 +2110,6 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             QTimer.singleShot(delay, final_cleanup)
 
         QTimer.singleShot(300, _send_params_delayed)
-
-    @staticmethod
-    def _pad_params(block, target_len: int):
-        """Pads block.params up to target_len with neutral values (50%)."""
-        while len(block.params) < target_len:
-            block.params.append(50.0)
 
     def _on_toggle_on(self, checked):
         b = self.blocks[self.selected_id]
