@@ -1506,7 +1506,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         # Preset list
         self.side_presets = QFrame()
         self.side_presets.setObjectName("sidePanel")
-        self.side_presets.setFixedWidth(220)
+        self.side_presets.setFixedWidth(245)
         ll = QVBoxLayout(self.side_presets)
         ll.setContentsMargins(8, 8, 8, 8)
         
@@ -1718,6 +1718,8 @@ class MainWindow(MidiEngineMixin, QMainWindow):
                 outline: none;
             }}
             QListWidget::item {{
+                min-height: 38px;
+                max-height: 38px;
                 padding: 4px 8px;
                 border-radius: 4px;
             }}
