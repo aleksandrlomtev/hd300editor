@@ -14,13 +14,13 @@ try:
 except ImportError:
     MIDO_OK = False
 
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QSize, QEvent, QEasingCurve, QPropertyAnimation
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QSize, QEvent, QEasingCurve, QPropertyAnimation, QObject
 from PyQt6.QtGui import QColor, QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QScrollArea, QSplitter,
     QListWidget, QListWidgetItem, QLineEdit,
-    QGraphicsBlurEffect, QFileDialog
+    QGraphicsBlurEffect, QFileDialog, QApplication
 )
 
 from constants import (
@@ -42,6 +42,84 @@ if sys.platform == "win32":
 
 
 from hd300_sysex_utils import make_save_sysex, get_preset_name
+
+
+class ClickOutsideFilter(QObject):
+    """
+    Фильтр событий для перехвата кликов мыши вне редактируемого поля.
+    """
+    def __init__(self, target_widget, callback):
+        super().__init__(target_widget)
+        self.target_widget = target_widget
+        self.callback = callback
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.MouseButtonPress:
+            pos = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else event.globalPos()
+            clicked_widget = QApplication.widgetAt(pos)
+            
+            widget = clicked_widget
+            is_child = False
+            while widget:
+                if widget == self.target_widget:
+                    is_child = True
+                    break
+                widget = widget.parentWidget()
+                
+            if not is_child:
+                self.callback()
+        return False
+
+
+class PresetNameLineEdit(QLineEdit):
+    """
+    Специальное поле ввода с поддержкой отмены по Esc и умного фильтра кликов.
+    """
+    def __init__(self, parent, item, original_name, on_commit, on_cancel):
+        super().__init__(original_name, parent)
+        self.item = item
+        self.original_name = original_name
+        self.on_commit = on_commit
+        self.on_cancel = on_cancel
+        self._finished = False
+
+        self.click_filter = ClickOutsideFilter(self, self.commit)
+        QApplication.instance().installEventFilter(self.click_filter)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.cancel()
+        elif event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.commit()
+        else:
+            super().keyPressEvent(event)
+
+    def commit(self):
+        if self._finished:
+            return
+        self._finished = True
+        try:
+            QApplication.instance().removeEventFilter(self.click_filter)
+        except:
+            pass
+        self.on_commit()
+
+    def cancel(self):
+        if self._finished:
+            return
+        self._finished = True
+        try:
+            QApplication.instance().removeEventFilter(self.click_filter)
+        except:
+            pass
+        self.on_cancel()
+
+    def destroy(self, destroyWindow=True, destroySubWindows=True):
+        try:
+            QApplication.instance().removeEventFilter(self.click_filter)
+        except:
+            pass
+        super().destroy(destroyWindow, destroySubWindows)
 
 
 class MainWindow(MidiEngineMixin, QMainWindow):
@@ -2284,15 +2362,6 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             return  # active preset only
 
         current_name = self.preset_name or ""
-        edit = QLineEdit(current_name)
-        edit.setMaxLength(15)
-        edit.setStyleSheet(
-            "QLineEdit { background: #1a1d22; color: #f0f0f0; border: 1px solid #d6923c;"
-            " border-radius: 3px; padding: 2px 4px; font-size: 8pt; }"
-        )
-        self.preset_list.setItemWidget(item, edit)
-        edit.setFocus()
-        edit.selectAll()
 
         def finish():
             if not edit.parent():
@@ -2311,5 +2380,18 @@ class MainWindow(MidiEngineMixin, QMainWindow):
             self._update_preset_ui(pc, name=new_name)
             self._log(f"📝 Name changed to '{new_name}' (unsaved — click Send Active)")
 
-        edit.returnPressed.connect(finish)
-        edit.editingFinished.connect(finish)
+        def cancel():
+            if not edit.parent():
+                return
+            self.preset_list.removeItemWidget(item)
+            self._log("❌ Rename cancelled")
+
+        edit = PresetNameLineEdit(self.preset_list, item, current_name, finish, cancel)
+        edit.setMaxLength(15)
+        edit.setStyleSheet(
+            "QLineEdit { background: #1a1d22; color: #f0f0f0; border: 1px solid #d6923c;"
+            " border-radius: 3px; padding: 2px 4px; font-size: 8pt; }"
+        )
+        self.preset_list.setItemWidget(item, edit)
+        edit.setFocus()
+        edit.selectAll()
