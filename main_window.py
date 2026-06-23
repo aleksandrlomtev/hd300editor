@@ -30,7 +30,6 @@ from constants import (
 from constants import FX_NAMES, AMP_NAMES, CAB_NAMES, MATCHED_CABS
 from block_model import BlockState
 from sysex_parser import parse_full_dump, unpack_sysex
-from invalid_wheelchair import warmup_4band_eq # Import shameful hacks
 from routing import flip_prepost, swap_blocks, apply_visual_order
 from preset_utils import h3e_to_sysex_bytes, syx_bytes_to_h3e
 from midi_engine import MidiEngineMixin, MIDO_OK
@@ -240,6 +239,36 @@ class MainWindow(MidiEngineMixin, QMainWindow):
 
 
         QTimer.singleShot(300, self._auto_connect)
+
+    def _warmup_4band_eq(self, bid):
+        """
+        ♿ HAWKING'S WHEELCHAIR (Special hack for 4-Band Shift EQ in REV slot).
+        Initializes CPU registers with SET commands to wake it up.
+        """
+        if bid != "REV":
+            return
+
+        self._log("♿ Forced warm-up for 4-Band EQ (FX4)...")
+        self._is_warming_up = True
+        
+        # SLOT 0x23 - REV parameter control
+        # Set all 5 knobs to 50% (center/0dB)
+        # And must send in pairs 0x63 (Live) and 0x62 (Commit), just like when turning sliders
+        warmup_val = [0x3F, 0x7F, 0x7F]
+        
+        try:
+            for p_idx in range(1, 6):
+                cmd_63 = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x63, 0x00, 0x23, p_idx] + warmup_val
+                cmd_62 = [0x00, 0x01, 0x0C, 0x14, 0x00, 0x62, 0x00, 0x23, p_idx] + warmup_val
+                
+                self._send_raw(cmd_63)
+                self._send_raw(cmd_62)
+                time.sleep(0.04) # small delay between parameters
+            
+            time.sleep(0.3) # Give the CPU time to digest these 10 messages
+        finally:
+            self._is_warming_up = False
+            self._log("♿ Landing completed.")
 
     # ── loading JSON/txt ──────────────────────────
 
@@ -2285,7 +2314,7 @@ class MainWindow(MidiEngineMixin, QMainWindow):
         if bid == "REV" and b.model_id == 0x24:
             # Run warmup in a separate thread so UI doesn't freeze during pauses
             import threading
-            threading.Thread(target=warmup_4band_eq, args=(self, bid), daemon=True).start()
+            threading.Thread(target=self._warmup_4band_eq, args=(bid,), daemon=True).start()
             # Give a bit more time before general parameter polling
             QTimer.singleShot(600, lambda: self._query_block_params(bid))
         elif bid == "AMP":
