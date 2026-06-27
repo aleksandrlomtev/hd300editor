@@ -45,7 +45,7 @@ from hd300_sysex_utils import make_save_sysex, get_preset_name
 
 class ClickOutsideFilter(QObject):
     """
-    Фильтр событий для перехвата кликов мыши вне редактируемого поля.
+    Event filter to intercept mouse clicks outside the editable field.
     """
     def __init__(self, target_widget, callback):
         super().__init__(target_widget)
@@ -72,7 +72,7 @@ class ClickOutsideFilter(QObject):
 
 class PresetNameLineEdit(QLineEdit):
     """
-    Специальное поле ввода с поддержкой отмены по Esc и умного фильтра кликов.
+    Custom input field supporting Escape to cancel and smart click filtering.
     """
     def __init__(self, parent, item, original_name, on_commit, on_cancel):
         super().__init__(original_name, parent)
